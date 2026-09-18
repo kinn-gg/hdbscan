@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -24,6 +25,51 @@ type parityCase struct {
 		ClusterPersistence []any  `json:"cluster_persistence"`
 		OutlierScores      []any  `json:"outlier_scores"`
 	} `json:"expected"`
+}
+
+func TestExactFixtureParityWithReference(t *testing.T) {
+	files, _ := filepath.Glob("testdata/parity/*.json")
+	for _, name := range files {
+		if filepath.Base(name) == "SHA256SUMS.json" {
+			continue
+		}
+		b, _ := os.ReadFile(name)
+		var f parityCase
+		if json.Unmarshal(b, &f) != nil || f.Expected.Outcome != "success" || f.Case.InputKind != "dense" || f.Case.Rows < 2 {
+			continue
+		}
+		data := decodeNums(f.Case.Data)
+		finite := true
+		for _, v := range data {
+			finite = finite && !math.IsNaN(v) && !math.IsInf(v, 0)
+		}
+		if !finite {
+			continue
+		}
+		t.Run(f.Case.Name, func(t *testing.T) {
+			c := Config{}
+			json.Unmarshal(f.Config["min_cluster_size"], &c.MinClusterSize)
+			json.Unmarshal(f.Config["min_samples"], &c.MinSamples)
+			json.Unmarshal(f.Config["alpha"], &c.Alpha)
+			json.Unmarshal(f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
+			json.Unmarshal(f.Config["allow_single_cluster"], &c.AllowSingleCluster)
+			x := Dense64{data, f.Case.Rows, f.Case.Cols}
+			want, err := Reference(context.Background(), x, c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, workers := range []int{1, 2} {
+				c.Workers = workers
+				got, err := Exact(context.Background(), x, c)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("workers=%d differs from Reference", workers)
+				}
+			}
+		})
+	}
 }
 
 func decodeNums(a []any) []float64 {

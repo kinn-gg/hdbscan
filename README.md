@@ -3,19 +3,21 @@
 An in-progress, memory-efficient Go implementation of HDBSCAN\*.
 
 Development is organized by [implementation milestones](MILESTONES.md). The
-current milestone provides an exact, deterministic `Reference` HDBSCAN* pipeline
-for correctness and parity testing, built on the validated distance kernels.
+default low- and moderate-dimensional Euclidean route is the exact,
+memory-efficient `Exact` engine. `Reference` remains the quadratic correctness
+oracle and fallback for unsupported tree workloads.
 
 ```go
-result, err := hdbscan.Reference(ctx, data, hdbscan.Config{
+result, err := hdbscan.Exact(ctx, data, hdbscan.Config{
     MinClusterSize: 5,
     MinSamples: 5,
     ClusterSelectionMethod: hdbscan.EOM,
 })
 ```
 
-`Reference` intentionally materializes the pairwise distance matrix and is
-limited to smaller data sets. See [the reference implementation guide](docs/reference.md).
+`Exact` never materializes the pairwise distance matrix. See the
+[exact-engine guide](docs/exact.md). `Reference` is limited to smaller data sets;
+see the [reference implementation guide](docs/reference.md).
 
 ## Development
 

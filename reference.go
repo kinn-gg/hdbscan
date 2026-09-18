@@ -26,6 +26,8 @@ type Config struct {
 	ClusterSelectionMethod ClusterSelectionMethod
 	AllowSingleCluster     bool
 	MaxClusterSize         int
+	// Workers bounds parallel work in Exact. Zero uses GOMAXPROCS.
+	Workers int
 }
 
 // MSTEdge is an edge in the mutual-reachability minimum spanning tree.
