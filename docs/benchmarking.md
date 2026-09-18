@@ -1,7 +1,22 @@
 # Benchmark methodology
 
-M0 benchmarks infrastructure and deterministic corpus generation. Algorithm
-benchmarks will be added as each implementation lands.
+M0 established the infrastructure and deterministic corpus generation. M1 adds
+`BenchmarkMetricDimensions`, which reports metric throughput for dimensions 0,
+2, 4, 8, and powers of two through 1024. Run it on each target architecture:
+
+```sh
+go test -run '^$' -bench BenchmarkMetricDimensions -benchmem .
+```
+
+The bytes/op rate treats both input vectors as read once (16 bytes per
+dimension). It is a cross-version throughput indicator, not a claim about
+physical memory traffic or cache misses.
+
+The portable scalar kernel is currently selected on every architecture. The M1
+dispatch boundary is deliberately kept outside inner loops; architecture-tuned
+kernels can be enabled only after their dimensional break-even point and parity
+with the scalar kernel have been measured. There is no unconditional SIMD path
+whose call and tail overhead penalizes short vectors.
 
 ## Corpus
 
