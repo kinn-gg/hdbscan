@@ -26,6 +26,12 @@ type Config struct {
 	ClusterSelectionMethod ClusterSelectionMethod
 	AllowSingleCluster     bool
 	MaxClusterSize         int
+	// ClusterSelectionEpsilon merges selected descendants whose split distance
+	// is below this threshold. Zero disables epsilon merging.
+	ClusterSelectionEpsilon float64
+	// ClusterSelectionPersistence removes clusters below this normalized
+	// stability threshold. It must be in [0,1].
+	ClusterSelectionPersistence float64
 	// Workers bounds parallel work in Exact. Zero uses GOMAXPROCS.
 	Workers int
 	// Algorithm controls the implementation used by Exact. The empty zero value
@@ -66,9 +72,13 @@ type Result struct {
 	SingleLinkageTree   []Linkage
 	CondensedTree       []CondensedEdge
 	Metadata            Metadata
+	config              Config
 }
 
-var ErrTooFewPoints = errors.New("hdbscan: at least two points are required")
+var (
+	ErrTooFewPoints  = errors.New("hdbscan: at least two points are required")
+	ErrInvalidConfig = errors.New("hdbscan: invalid configuration")
+)
 
 // Reference runs the deliberately simple exact HDBSCAN* correctness oracle.
 // It uses O(n²) time and O(n²) memory to materialize pairwise distances.
@@ -117,25 +127,34 @@ func normalizeConfig(c Config, n int) (Config, error) {
 		c.MinClusterSize = 5
 	}
 	if c.MinClusterSize < 2 {
-		return c, fmt.Errorf("hdbscan: min cluster size must be at least 2")
+		return c, fmt.Errorf("%w: min cluster size must be at least 2", ErrInvalidConfig)
 	}
 	if c.MinSamples == 0 {
 		c.MinSamples = c.MinClusterSize
 	}
 	if c.MinSamples < 1 {
-		return c, fmt.Errorf("hdbscan: min samples must be positive")
+		return c, fmt.Errorf("%w: min samples must be positive", ErrInvalidConfig)
 	}
 	if c.Alpha == 0 {
 		c.Alpha = 1
 	}
 	if c.Alpha < 0 || math.IsNaN(c.Alpha) || math.IsInf(c.Alpha, 0) {
-		return c, fmt.Errorf("hdbscan: alpha must be finite and positive")
+		return c, fmt.Errorf("%w: alpha must be finite and positive", ErrInvalidConfig)
 	}
 	if c.ClusterSelectionMethod == "" {
 		c.ClusterSelectionMethod = EOM
 	}
 	if c.ClusterSelectionMethod != EOM && c.ClusterSelectionMethod != Leaf {
-		return c, fmt.Errorf("hdbscan: invalid cluster selection method %q", c.ClusterSelectionMethod)
+		return c, fmt.Errorf("%w: invalid cluster selection method %q", ErrInvalidConfig, c.ClusterSelectionMethod)
+	}
+	if c.MaxClusterSize < 0 {
+		return c, fmt.Errorf("%w: max cluster size must not be negative", ErrInvalidConfig)
+	}
+	if c.ClusterSelectionEpsilon < 0 || math.IsNaN(c.ClusterSelectionEpsilon) || math.IsInf(c.ClusterSelectionEpsilon, 0) {
+		return c, fmt.Errorf("%w: cluster selection epsilon must be finite and nonnegative", ErrInvalidConfig)
+	}
+	if c.ClusterSelectionPersistence < 0 || c.ClusterSelectionPersistence > 1 || math.IsNaN(c.ClusterSelectionPersistence) {
+		return c, fmt.Errorf("%w: cluster selection persistence must be in [0,1]", ErrInvalidConfig)
 	}
 	return c, nil
 }
@@ -189,7 +208,15 @@ func referenceDistances(ctx context.Context, d []float64, n int, cfg Config) (Re
 		OutlierScores: outliers(n, condensed), MinimumSpanningTree: mst,
 		SingleLinkageTree: link, CondensedTree: condensed,
 		Metadata: Metadata{Algorithm: AlgorithmReference},
+		config:   retainedConfig(cfg),
 	}, nil
+}
+
+func retainedConfig(config Config) Config {
+	config.Workers = 0
+	config.Algorithm = ""
+	config.ApproximateBackend = nil
+	return config
 }
 
 func densePrim(ctx context.Context, n int, dist func(int, int) float64) []MSTEdge {
@@ -452,6 +479,29 @@ func selectClusters(n int, t []CondensedEdge, s map[int]float64, c Config) ([]in
 			}
 		}
 	}
+	if c.ClusterSelectionEpsilon > 0 && len(selected) > 0 {
+		parent := make(map[int]int)
+		birth := make(map[int]float64)
+		for _, e := range t {
+			if e.ChildSize > 1 {
+				parent[e.Child], birth[e.Child] = e.Parent, e.Lambda
+			}
+		}
+		threshold := 1 / c.ClusterSelectionEpsilon
+		merged := make(map[int]bool)
+		for id := range selected {
+			target := id
+			for birth[target] > threshold {
+				next, ok := parent[target]
+				if !ok || (next == root && !c.AllowSingleCluster) {
+					break
+				}
+				target = next
+			}
+			merged[target] = true
+		}
+		selected = merged
+	}
 	clusters := make([]int, 0)
 	for id := range selected {
 		clusters = append(clusters, id)
@@ -518,6 +568,13 @@ func selectClusters(n int, t []CondensedEdge, s map[int]float64, c Config) ([]in
 			persist[i] = 1
 		} else {
 			persist[i] = s[id] / (float64(counts[i]) * maxLam)
+		}
+	}
+	if c.ClusterSelectionPersistence > 0 {
+		for i, label := range labels {
+			if label >= 0 && persist[label] < c.ClusterSelectionPersistence {
+				labels[i], probs[i] = -1, 0
+			}
 		}
 	}
 	return labels, probs, persist

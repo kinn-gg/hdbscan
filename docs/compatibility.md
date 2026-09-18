@@ -14,8 +14,7 @@ of every changed result.
 
 ## Initial parameter contract
 
-The Go API is not fixed yet. These are the upstream semantics the implementation
-must preserve for the v0.1 dense and precomputed-distance paths.
+The v0.1 API preserves these upstream semantics for dense and precomputed paths.
 
 | Parameter | Upstream default | Contract |
 |---|---:|---|
@@ -90,3 +89,21 @@ Python-specific estimator behavior, pandas/NetworkX conversion, plotting, joblib
 caching, and scikit-learn metadata are outside the Go compatibility contract.
 Tree and graph content remains in scope through native Go records and streaming
 encoders.
+
+## Python-to-Go feature matrix
+
+| Python `hdbscan` feature | Go v0.1 | Notes |
+|---|---|---|
+| Dense float64 fitting | Yes | `Model.Fit`, `Fit`; finite row-major input. |
+| `fit_predict` | Yes | `Model.FitPredict`, `FitPredict`. |
+| Euclidean, Manhattan, Minkowski | Yes | Auto optimization is Euclidean; others use bounded brute force. |
+| Dense precomputed distances | Yes | `ReferencePrecomputed`; `+Inf` missing edges supported. |
+| EOM and leaf selection | Yes | Also available through retained `Result.Extract`. |
+| Selection epsilon/persistence | Yes | Configurable at fit or retained-hierarchy extraction. |
+| Probabilities/persistence/GLOSH | Yes | Native owned slices. |
+| Condensed/linkage/MST data | Yes | Native records and streaming CSV/NDJSON. |
+| Approximate MST | Yes | Explicit opt-in and marked in `Metadata`. |
+| New-point prediction | No | Planned for M6. |
+| Soft membership vectors | No | Planned for M6. |
+| Sparse matrices/graphs | No | Outside v0.1 scope. |
+| pandas, NetworkX, plotting, sklearn metadata | No | Python integration surface is intentionally not ported. |

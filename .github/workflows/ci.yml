@@ -35,6 +35,8 @@ jobs:
           cache: true
       - run: go test -race ./...
       - run: go test ./internal/evaluation -run '^$' -fuzz FuzzCanonicalLabels -fuzztime 10s
+      - run: go test . -run '^$' -fuzz FuzzReference -fuzztime 10s
+      - run: go test . -run '^$' -fuzz FuzzEuclideanAgreement -fuzztime 10s
 
   vector-kernels:
     runs-on: ubuntu-24.04
@@ -79,3 +81,44 @@ jobs:
           enable-cache: true
       - run: uv sync --locked --project tools/fixtures
       - run: uv run --project tools/fixtures python tools/fixtures/generate.py --check
+
+  quality:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.x'
+          cache: true
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go run honnef.co/go/tools/cmd/staticcheck@2026.2.1 ./...
+      - run: go test -coverprofile=coverage.out ./...
+      - name: Enforce public API snapshot
+        run: go test -run TestPublicAPISnapshot .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+
+  cross-compile:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        include:
+          - { goos: linux, goarch: amd64 }
+          - { goos: linux, goarch: arm64 }
+          - { goos: darwin, goarch: amd64 }
+          - { goos: darwin, goarch: arm64 }
+          - { goos: windows, goarch: amd64 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: true
+      - name: Compile tests
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go test -exec=true -run '^$' ./...

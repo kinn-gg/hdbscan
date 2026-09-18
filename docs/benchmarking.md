@@ -58,6 +58,9 @@ and managed bytes/op. The Auto regression budget is 1.5× the fastest exact
 built-in path for each matrix workload; CI records the values rather than using
 timing as a flaky pass/fail gate. See [the algorithm guide](algorithms.md).
 
+The pinned M5 release comparison and its explicit runtime/RSS gates are published
+in [`benchmarks/m5-linux-amd64.md`](benchmarks/m5-linux-amd64.md).
+
 ## CI policy
 
 The benchmark workflow uses the version-pinned `ubuntu-24.04` GitHub runner image
