@@ -6,6 +6,7 @@ import (
 	"errors"
 	"math"
 	"os"
+	"strconv"
 	"testing"
 )
 
@@ -116,11 +117,14 @@ func TestPredictionPinnedUpstreamFixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	q := Dense64{Data: []float64{4.5, -1, 5.7, 3.1, -6.4, 7.7, 0, 0}, Rows: 4, Cols: 2}
-	wantLabels := []int{1, 2, 0, -1}
-	wantStrengths := []float64{1, 0.6751027115642216, 0.7224072621432686, 0}
-	wantScores := []float64{-0.06483954058634919, 0.32489728843577836, 0.27759273785673144, 0.9521490296534547}
-	wantMemberships := []float64{4.080319370440225e-35, 0.9746176409022883, 7.842487890953671e-35, 0.0011936367705573288, 0.002175541113635202, 0.6717335326028261, 0.7217776246357392, 0.0003097526473338171, 0.00031988358755448475, 0.011116848637371383, 0.017884462832701876, 0.014793823343511387}
+	q := Dense64{Data: decodeNums(fixture.Prediction.Queries), Rows: fixture.Prediction.Rows, Cols: fixture.Prediction.Cols}
+	wantLabels := fixture.Prediction.Labels
+	wantStrengths := decodeNums(fixture.Prediction.Strengths)
+	wantScores := decodeNums(fixture.Prediction.Scores)
+	var wantMemberships []float64
+	for _, row := range fixture.Prediction.Memberships {
+		wantMemberships = append(wantMemberships, decodeNums(row)...)
+	}
 	labels, strengths, err := result.ApproximatePredict(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)
@@ -147,11 +151,13 @@ func TestPredictionPinnedUpstreamFixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantAll := map[int][]float64{
-		1:  {0.014564607143082112, 0.04515573143854055, 0.6270760734553907},
-		2:  {0.965065598529661, 0.0029015257672342603, 0.0031174748585587296},
-		20: {0.9704707407204425, 0.0024041542661024824, 0.002572821228459363},
-		40: {0.008332551537621479, 0.023906530692483587, 0.5920616969941077},
+	wantAll := make(map[int][]float64, len(fixture.Prediction.SampledAllMemberships))
+	for row, values := range fixture.Prediction.SampledAllMemberships {
+		index, err := strconv.Atoi(row)
+		if err != nil {
+			t.Fatal(err)
+		}
+		wantAll[index] = decodeNums(values)
 	}
 	// The pinned Cython oracle leaves underflowed off-cluster cells uninitialized;
 	// rows with material values provide a stable parity contract.

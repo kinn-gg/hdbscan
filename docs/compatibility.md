@@ -41,13 +41,17 @@ stable API.
 
 - Noise labels are `-1`. Non-noise cluster numbers carry no identity across
   implementations and are compared using partitions, not integer equality.
-- Membership probabilities and persistence values are finite values in `[0, 1]`,
-  compared with absolute tolerance `1e-7` and relative tolerance `1e-6` unless a
-  fixture documents a stricter exact expectation.
+- Membership probabilities are finite values in `[0, 1]`. Persistence values are
+  finite and nonnegative; upstream can report values above one for an allowed
+  root cluster. Both use absolute tolerance `1e-7` and relative tolerance `1e-6`
+  unless a fixture documents a stricter exact expectation.
 - GLOSH outlier scores use the same tolerances. Upstream NaN values, when they are
   the defined result for a degenerate case, are encoded as strings in JSON.
-- Condensed tree, linkage tree, and MST comparisons canonicalize endpoint order and
-  sort equal-weight edges before comparing.
+- Tree parity is semantic where equal-weight spanning trees are non-unique. MST
+  edge weights and unique-weight endpoints are compared; linkage merge distances
+  and root coverage are compared; condensed-tree lambda/child-size records and
+  all derived flat outputs are compared. This rejects numerical or hierarchy
+  drift without requiring SciPy's incidental choice among tied valid edges.
 
 ## Partition comparison
 

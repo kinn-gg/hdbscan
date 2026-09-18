@@ -10,7 +10,9 @@ uv sync --locked --project tools/fixtures
 uv run --project tools/fixtures python tools/fixtures/generate.py
 ```
 
-Verify that a clean regeneration is byte-for-byte identical:
+Verify that a clean regeneration is semantically identical (floating-point
+values tolerate platform drift at `1e-12`) and that committed bytes match the
+recorded checksums:
 
 ```sh
 uv run --project tools/fixtures python tools/fixtures/generate.py --check

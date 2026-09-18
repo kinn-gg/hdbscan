@@ -36,6 +36,7 @@ jobs:
       - run: go test -race ./...
       - run: go test ./internal/evaluation -run '^$' -fuzz FuzzCanonicalLabels -fuzztime 10s
       - run: go test . -run '^$' -fuzz FuzzReference -fuzztime 10s
+      - run: go test . -run '^$' -fuzz FuzzBranchDetection -fuzztime 10s
       - run: go test . -run '^$' -fuzz FuzzEuclideanAgreement -fuzztime 10s
 
   vector-kernels:

@@ -37,7 +37,8 @@ override the fitted partition. All output slices are owned by the result.
 
 The pinned upstream fixture uses `hdbscan 0.8.44` and a deterministic three-flare
 example. Full-graph partitions exceed 0.96 pairwise agreement under the distinct
-stable tie policies. Equal-centrality
+stable tie policies; core-graph partitions exceed 0.75 and use explicit
+probability and graph/tree-size quality gates. Equal-centrality
 MSTs are not unique: Go orders by centrality, reachability, and packed endpoints;
 SciPy may choose a different valid tree. Core graphs also intentionally collapse
 upstream duplicate endpoint pairs, so incidental raw edge counts are not a parity

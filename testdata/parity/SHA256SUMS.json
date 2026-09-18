@@ -1,17 +1,25 @@
 {
   "all_noise.json": "72f143c815dbaba66697728a9e0fc795f5f8a0dca16e0e01551b094bf2f9b02a",
   "allow_single_cluster.json": "c8d773c31a04007754a23422fcd9abcfaefd656950aa55e59e51b4d548aa13b4",
+  "alpha_nondefault.json": "5fc03ee4b4c4da1cd469da57bde861f858e1ace858b0ba89c438f88351ba266b",
   "branch_shapes.json": "349604b3f8c527134cfcab256701d0b952ba37126209dba63509648a3037e885",
   "duplicates_ties_eom.json": "5b4c13c0cb13d3c68266a910505e5ce3cafe6c542197792bc9769f6a62bf0198",
   "duplicates_ties_leaf.json": "2be2738f9c7c46cc2c54ae556c760d66532467233db92c5e06997d8a06421aa6",
   "empty.json": "7c2476626ddda76931af38465925d58f2cf811bf82eff6aab21362871bdc7465",
   "high_dimensional.json": "bf2856c251c85506a295eabf9c9ffd9f5a87e2e508cac41edf30906d08571b03",
+  "max_cluster_size.json": "8076fbe1cf6de2568d931002528a5e115d55bb73ccdb83e9772aa6804b732906",
   "metric_braycurtis.json": "79ce9c1f86e89dde46de0248c3ad6ad87eaa980be11f46104328323578c00b78",
   "metric_canberra.json": "cef69efc010120befb0517b62a427e2562bebdd8682b31e9318ffa522661c1c5",
   "metric_chebyshev.json": "dd6d491dd2f145d2afe73f10409cef1ca18f1a593b747b68e3823bb6f82d8b65",
+  "metric_manhattan.json": "ca37b19aa8a1b81edbdf29aefc61cbed5997dcb7a331da525306bcd33c60b80f",
+  "metric_minkowski_p3.json": "916c25baa6513d6764c8cc9cfe9c510973d301df357c1781aa396dfbff5d4474",
   "nonfinite_rows.json": "a62655a98bcba83e5c036534228ea385b664e5da0629d4d2545c8d4a5e9e4e5b",
+  "precomputed_dense_connected.json": "2f86b45d30f4aa0649e2e666908082b6b81c0ca89444d25a0aa263a83412b67e",
+  "precomputed_dense_missing_edges.json": "3c4657158e8068ff795e1bc9b5e9553640bc87898e1894dac40b95d80573f98c",
   "precomputed_disconnected.json": "6bdc4c0138bb4df52acae015e72c86e43ad91b107af7694806327bb24957ecfe",
   "precomputed_sparse_connected.json": "aac4a57adca332c70e02c76fda076fbca5b41565e2d679b8b3a18c795464ec81",
+  "selection_epsilon.json": "fc5aebf8b4b7bc27f9c0c7bb74c2ae8d2c92d0a060b06a8402d2c9a41efb2ad5",
+  "selection_persistence.json": "81c80542eb53e31bbd96f4413baf5f261243e69cafb54b87d748ab9e73f71fcd",
   "singleton.json": "91b8f53473d0d0947a761ceaf4e06d2b452dc70bac0ac9f8bfe73173b687289f",
-  "synthetic_blobs.json": "b3b06902a52bd807ea0351de02c43b627041ce822cd823742dcb31a49d5a7533"
+  "synthetic_blobs.json": "3f07b36c368bcaf77863e277ad9bde5ece8ed572e5e1b3fa1aac8498793373f2"
 }
