@@ -40,6 +40,9 @@ type Config struct {
 	// ApproximateBackend optionally replaces the built-in approximate neighbor
 	// graph implementation. It is only consulted for AlgorithmApproximate.
 	ApproximateBackend ApproximateBackend
+	// PredictionData retains the compact state required to assign new points
+	// and compute soft memberships. It is disabled by default.
+	PredictionData bool
 }
 
 // MSTEdge is an edge in the mutual-reachability minimum spanning tree.
@@ -73,6 +76,7 @@ type Result struct {
 	CondensedTree       []CondensedEdge
 	Metadata            Metadata
 	config              Config
+	prediction          *predictionData
 }
 
 var (
@@ -107,7 +111,7 @@ func Reference(ctx context.Context, x Dense64, cfg Config) (Result, error) {
 			d[i*n+j], d[j*n+i] = v, v
 		}
 	}
-	return referenceDistances(ctx, d, n, cfg)
+	return referenceDistances(ctx, d, n, cfg, x)
 }
 
 // ReferencePrecomputed runs Reference with a caller-supplied dense distance
@@ -119,7 +123,10 @@ func ReferencePrecomputed(ctx context.Context, p Precomputed, cfg Config) (Resul
 	if p.Rows < 2 {
 		return Result{}, ErrTooFewPoints
 	}
-	return referenceDistances(ctx, append([]float64(nil), p.Data...), p.Rows, cfg)
+	if cfg.PredictionData {
+		return Result{}, ErrPredictionUnsupported
+	}
+	return referenceDistances(ctx, append([]float64(nil), p.Data...), p.Rows, cfg, Dense64{})
 }
 
 func normalizeConfig(c Config, n int) (Config, error) {
@@ -159,7 +166,7 @@ func normalizeConfig(c Config, n int) (Config, error) {
 	return c, nil
 }
 
-func referenceDistances(ctx context.Context, d []float64, n int, cfg Config) (Result, error) {
+func referenceDistances(ctx context.Context, d []float64, n int, cfg Config, x Dense64) (Result, error) {
 	cfg, err := normalizeConfig(cfg, n)
 	if err != nil {
 		return Result{}, err
@@ -207,8 +214,9 @@ func referenceDistances(ctx context.Context, d []float64, n int, cfg Config) (Re
 		Labels: labels, Probabilities: probs, ClusterPersistence: persistence,
 		OutlierScores: outliers(n, condensed), MinimumSpanningTree: mst,
 		SingleLinkageTree: link, CondensedTree: condensed,
-		Metadata: Metadata{Algorithm: AlgorithmReference},
-		config:   retainedConfig(cfg),
+		Metadata:   Metadata{Algorithm: AlgorithmReference},
+		config:     retainedConfig(cfg),
+		prediction: makePredictionData(x, condensed, cfg),
 	}, nil
 }
 
@@ -216,6 +224,7 @@ func retainedConfig(config Config) Config {
 	config.Workers = 0
 	config.Algorithm = ""
 	config.ApproximateBackend = nil
+	config.PredictionData = false
 	return config
 }
 

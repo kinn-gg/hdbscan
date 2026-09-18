@@ -103,7 +103,7 @@ encoders.
 | Probabilities/persistence/GLOSH | Yes | Native owned slices. |
 | Condensed/linkage/MST data | Yes | Native records and streaming CSV/NDJSON. |
 | Approximate MST | Yes | Explicit opt-in and marked in `Metadata`. |
-| New-point prediction | No | Planned for M6. |
-| Soft membership vectors | No | Planned for M6. |
+| New-point prediction | Yes | Opt in with `Config.PredictionData`; approximate labels, strengths, and GLOSH scores. |
+| Soft membership vectors | Yes | Single, batched, fitted-point, and caller-buffer APIs. |
 | Sparse matrices/graphs | No | Outside v0.1 scope. |
 | pandas, NetworkX, plotting, sklearn metadata | No | Python integration surface is intentionally not ported. |
