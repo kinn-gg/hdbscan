@@ -13,6 +13,8 @@ units. As IEEE-754 requires, squared distance can itself overflow even when the
 corresponding Euclidean distance is representable.
 
 Scalar accumulation is deterministic for a fixed input and Go architecture.
-Future vector kernels must produce bitwise-identical ordering keys or document a
-relative tolerance and retain a stable index-based tie breaker. Architecture
-dispatch is selected once by the caller, never within a vector loop.
+Vector reductions may reassociate additions and therefore use a relative parity
+tolerance of `2e-14 * max(1, abs(scalar))`. Algorithms must retain a stable
+index-based tie breaker when values compare equal within that tolerance.
+Architecture and dimensional dispatch is selected once by the caller, never
+within a vector loop.

@@ -17,7 +17,7 @@ var scalarKernels = Kernels{
 	SquaredEuclideanBlock: SquaredEuclideanBlock,
 }
 
-// Select returns the best measured kernel table for this process. M1 keeps the
-// portable scalar implementation as the default on every architecture; tuned
-// tables can be added here without changing algorithm hot loops.
-func Select() Kernels { return scalarKernels }
+// Select returns the best kernel table for vectors with dims components. Call
+// it once per fit; dimensional thresholds prevent vector setup and tail costs
+// from slowing down short vectors.
+func Select(dims int) Kernels { return selectKernels(dims) }

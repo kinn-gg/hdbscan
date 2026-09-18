@@ -36,6 +36,39 @@ jobs:
       - run: go test -race ./...
       - run: go test ./internal/evaluation -run '^$' -fuzz FuzzCanonicalLabels -fuzztime 10s
 
+  vector-kernels:
+    runs-on: ubuntu-24.04
+    env:
+      GOAMD64: v3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache: false
+      - run: go test ./internal/distance
+      - run: go test ./internal/distance -run '^$' -fuzz FuzzVectorKernelParity -fuzztime 10s
+      - name: Cross-compile ARM64 vector tests
+        env:
+          GOOS: linux
+          GOARCH: arm64
+          GOAMD64: ''
+        run: go test -c ./internal/distance -o distance-arm64.test
+
+  arm64-vector-kernels:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache: false
+      - name: Require native ARM64 runner
+        run: test "$(go env GOARCH)" = arm64
+      - run: go test ./internal/distance
+      - run: go test ./internal/distance -run '^$' -fuzz FuzzVectorKernelParity -fuzztime 10s
+      - run: go test ./internal/distance -run '^$' -bench BenchmarkScalarVectorBreakEven -benchmem -benchtime 100ms
+
   fixtures:
     runs-on: ubuntu-24.04
     steps:

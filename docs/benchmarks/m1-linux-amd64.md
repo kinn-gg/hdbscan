@@ -17,3 +17,22 @@ repeat with `-count 5` and benchstat before using them for regressions.
 | 256 | 241.8 | 16,937 | 0 | 0 |
 | 512 | 471.8 | 17,363 | 0 | 0 |
 | 1024 | 970.3 | 16,886 | 0 | 0 |
+
+## AVX2 break-even
+
+Recorded on the same host with `GOAMD64=v3`. These measurements compare squared
+Euclidean kernels directly and establish the dispatch threshold at four
+dimensions: AVX2 is slower at two dimensions and faster from four onward.
+
+| Dimensions | Scalar ns/op | AVX2 ns/op | Speedup |
+|---:|---:|---:|---:|
+| 2 | 2.626 | 3.412 | 0.77x |
+| 4 | 3.574 | 2.449 | 1.46x |
+| 8 | 4.440 | 3.109 | 1.43x |
+| 16 | 5.816 | 4.348 | 1.34x |
+| 32 | 11.97 | 5.996 | 2.00x |
+| 64 | 29.95 | 9.901 | 3.02x |
+| 128 | 83.03 | 14.53 | 5.71x |
+| 256 | 196.9 | 23.16 | 8.50x |
+| 512 | 483.2 | 49.37 | 9.79x |
+| 1024 | 1055 | 101.6 | 10.38x |

@@ -12,11 +12,10 @@ The bytes/op rate treats both input vectors as read once (16 bytes per
 dimension). It is a cross-version throughput indicator, not a claim about
 physical memory traffic or cache misses.
 
-The portable scalar kernel is currently selected on every architecture. The M1
-dispatch boundary is deliberately kept outside inner loops; architecture-tuned
-kernels can be enabled only after their dimensional break-even point and parity
-with the scalar kernel have been measured. There is no unconditional SIMD path
-whose call and tail overhead penalizes short vectors.
+`BenchmarkScalarVectorBreakEven` compares the portable scalar kernel with AVX2
+or NEON at each dimension. AVX2 is compiled when `GOAMD64=v3`; ARM64 always has
+NEON. The measured threshold is applied once by `distance.Select`, outside hot
+loops, so vector setup and tail overhead do not penalize short vectors.
 
 ## Corpus
 

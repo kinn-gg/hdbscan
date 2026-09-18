@@ -96,10 +96,24 @@ func Dot(a, b []float64) float64 {
 // SquaredEuclideanBlock fills dst with distances between each row in a and b.
 // dst is row-major with aRows*bRows entries. Inputs and dst must not overlap.
 func SquaredEuclideanBlock(dst, a, b []float64, aRows, bRows, dims int) {
-	for i := 0; i < aRows; i++ {
-		arow := a[i*dims : (i+1)*dims]
-		for j := 0; j < bRows; j++ {
-			dst[i*bRows+j] = SquaredEuclidean(arow, b[j*dims:(j+1)*dims])
+	squaredEuclideanBlock(dst, a, b, aRows, bRows, dims, SquaredEuclidean)
+}
+
+const blockRows = 32
+
+func squaredEuclideanBlock(dst, a, b []float64, aRows, bRows, dims int, kernel func([]float64, []float64) float64) {
+	// Tile the row-pair traversal so the B rows and destination window stay hot
+	// when callers submit large batches. Vector contents remain contiguous.
+	for ii := 0; ii < aRows; ii += blockRows {
+		iEnd := min(ii+blockRows, aRows)
+		for jj := 0; jj < bRows; jj += blockRows {
+			jEnd := min(jj+blockRows, bRows)
+			for i := ii; i < iEnd; i++ {
+				arow := a[i*dims : (i+1)*dims]
+				for j := jj; j < jEnd; j++ {
+					dst[i*bRows+j] = kernel(arow, b[j*dims:(j+1)*dims])
+				}
+			}
 		}
 	}
 }

@@ -38,7 +38,7 @@ func TestSquaredEuclideanBlock(t *testing.T) {
 }
 
 func TestSelectedKernelsMatchScalar(t *testing.T) {
-	k := Select()
+	k := Select(3)
 	a, b := []float64{1, 2, 3}, []float64{-2, 4, 8}
 	if got, want := k.Dot(a, b), Dot(a, b); got != want {
 		t.Fatalf("selected dot = %g, scalar = %g", got, want)
