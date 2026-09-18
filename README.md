@@ -1,23 +1,56 @@
 # hdbscan
 
-A deterministic, cancellable, memory-conscious Go implementation of HDBSCAN\*.
+A production-oriented Go implementation of HDBSCAN\*: density-based clustering
+that discovers clusters of varying shape and labels low-density observations as
+noise without requiring the number of clusters in advance.
 
-`Exact` selects an exact, memory-efficient implementation for the data shape and
-metric. `Reference` remains the quadratic-memory correctness oracle.
+The project aims to provide:
+
+- deterministic results for a fixed input and configuration;
+- exact clustering with bounded, subquadratic auxiliary memory;
+- explicit cancellation and ownership semantics for production Go programs;
+- compatibility with the core algorithms and outputs of Python's `hdbscan`.
+
+## Features
+
+- Dense vectors, precomputed distance matrices, and sparse CSR distance graphs
+- Exact k-d tree and blocked brute-force execution with automatic selection
+- EOM and leaf cluster selection, probabilities, persistence, and outlier scores
+- Out-of-sample prediction and soft membership vectors
+- Euclidean, Manhattan, Minkowski, Chebyshev, Canberra, Bray-Curtis, and custom
+  metrics
+- Robust single linkage, DBCV validity scoring, and FLASC branch detection
+- Streaming CSV and JSON export for trees and graphs
+- Context cancellation, deterministic tie-breaking, and pure Go fallbacks
+
+Approximate execution and memory-heavy prediction or branch data are always
+opt-in. The default exact path does not materialize a pairwise distance matrix.
+
+## Quick start
+
+```sh
+go get github.com/kinn-gg/hdbscan
+```
 
 ```go
 model, err := hdbscan.New(hdbscan.Config{
     MinClusterSize: 5,
-    MinSamples: 5,
-    ClusterSelectionMethod: hdbscan.EOM,
+    MinSamples:     5,
 })
-if err != nil { /* handle invalid configuration */ }
+if err != nil {
+    return err
+}
+
 result, err := model.Fit(ctx, data)
+if err != nil {
+    return err
+}
+
+fmt.Println(result.Labels)
 ```
 
-Set `PredictionData: true` before fitting to retain the data needed for
-out-of-sample assignment and soft clustering. Prediction is opt-in so ordinary
-fits do not retain a copy of the input:
+Enable `PredictionData` when fitting to support assignment and soft membership
+for new observations:
 
 ```go
 result, err := hdbscan.Fit(ctx, training, hdbscan.Config{
@@ -25,40 +58,16 @@ result, err := hdbscan.Fit(ctx, training, hdbscan.Config{
     PredictionData: true,
 })
 labels, strengths, err := result.ApproximatePredict(ctx, novel)
-memberships, err := result.MembershipVectors(ctx, novel)
 ```
 
-Caller-buffer forms (`PredictInto`, `PredictScoresInto`,
-`MembershipVectorsInto`, and `AllPointsMembershipVectorsInto`) keep output and
-scratch memory bounded for large batches.
+## Documentation
 
-For repeatable benchmarks, set `Config.Algorithm` to `AlgorithmKDTree` or
-`AlgorithmBruteForce`. `AlgorithmApproximate` is opt-in and is always identified
-by `result.Metadata.Approximate`; `Auto` never selects it.
-
-`Exact` never materializes the pairwise distance matrix. See the
-[algorithm guide](docs/algorithms.md). `Reference` is limited to smaller data sets;
-see the [reference implementation guide](docs/reference.md).
-
-Every result owns its slices. `Result.Extract` can apply alternate EOM/leaf,
-single-cluster, size, epsilon, and persistence settings to the retained hierarchy
-without rebuilding neighbors or the MST. Tree exporters stream CSV or newline-
-delimited JSON directly to an `io.Writer`.
-
-Extended parity includes Chebyshev, Canberra, and Bray-Curtis metrics,
-caller-owned CSR distance graphs through `ReferenceSparse`, robust single
-linkage with reusable hierarchy cuts, and the streaming `ValidityIndex` DBCV
-implementation. Sparse inputs are never densified; disconnected graphs return
-`ErrDisconnected` with an explicit component count.
-
-FLASC branch detection is opt-in through `Config.BranchDetectionData` and
-`Result.DetectBranches`; it includes packed approximation graphs, per-cluster
-branch hierarchies and persistence, membership strengths, streaming graph export,
-and approximate branch prediction. See the [branch guide](docs/branch-detection.md)
-and [v1 compatibility policy](docs/v1.md).
-
-See the [production guide](docs/production.md) for complexity, memory sizing,
-profiling, cancellation, reproducibility, and release support.
+- [Algorithms and execution modes](docs/algorithms.md)
+- [Compatibility](docs/compatibility.md)
+- [Prediction and production guidance](docs/production.md)
+- [Branch detection](docs/branch-detection.md)
+- [Version 1 support policy](docs/v1.md)
+- [Benchmark methodology](docs/benchmarking.md)
 
 ## Development
 
@@ -75,6 +84,3 @@ Python parity fixtures are reproducible with `uv`:
 uv sync --locked --project tools/fixtures
 uv run --project tools/fixtures python tools/fixtures/generate.py --check
 ```
-
-See [the compatibility contract](docs/compatibility.md) and
-[benchmarking guide](docs/benchmarking.md).
