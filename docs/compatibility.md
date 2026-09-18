@@ -109,4 +109,5 @@ encoders.
 | Sparse precomputed graphs | Yes | Symmetric CSR stays sparse; missing entries are absent edges. Disconnected graphs return `ErrDisconnected` with a component count. |
 | Robust single linkage/tree cuts | Yes | Shared neighbor, mutual-reachability MST, and linkage representation. |
 | DBCV validity index | Yes | Pair work is streamed; no all-pairs matrix is allocated. |
+| FLASC branch detection | Yes | Opt-in dense feature state; full/core packed graphs, hierarchies, persistence, membership, and approximate prediction. |
 | pandas, NetworkX, plotting, sklearn metadata | No | Python integration surface is intentionally not ported. |

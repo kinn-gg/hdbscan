@@ -61,6 +61,14 @@ timing as a flaky pass/fail gate. See [the algorithm guide](algorithms.md).
 The pinned M5 release comparison and its explicit runtime/RSS gates are published
 in [`benchmarks/m5-linux-amd64.md`](benchmarks/m5-linux-amd64.md).
 
+M8 adds `BenchmarkBranchDetection`. Run it separately for `GOARCH=amd64` and on
+physical `arm64`; cross-compilation validates portability but is not a performance
+measurement. FLASC reports must identify `full` or `core`, graph edge count, and
+retained branch-data cost. Experimental float32/GPU/mmap/parallel-linkage work
+must live outside the portable package and publish accuracy and complexity deltas.
+The initial amd64 result and explicit arm64 measurement gap are published in
+[`benchmarks/m8-linux-amd64.md`](benchmarks/m8-linux-amd64.md).
+
 ## CI policy
 
 The benchmark workflow uses the version-pinned `ubuntu-24.04` GitHub runner image

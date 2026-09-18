@@ -67,6 +67,9 @@ func ReferenceSparse(ctx context.Context, s SparsePrecomputed, cfg Config) (Resu
 	if cfg.PredictionData {
 		return Result{}, ErrPredictionUnsupported
 	}
+	if cfg.BranchDetectionData {
+		return Result{}, ErrBranchUnsupported
+	}
 	cfg, err := normalizeConfig(cfg, s.Rows)
 	if err != nil {
 		return Result{}, err
