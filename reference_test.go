@@ -16,6 +16,10 @@ type parityCase struct {
 		InputKind  string `json:"input_kind"`
 		Rows, Cols int
 		Data       []any
+		CSR        struct {
+			Data            []any `json:"data"`
+			Indices, IndPtr []int
+		} `json:"csr"`
 	} `json:"case"`
 	Config   map[string]json.RawMessage `json:"config"`
 	Expected struct {
@@ -25,6 +29,34 @@ type parityCase struct {
 		ClusterPersistence []any  `json:"cluster_persistence"`
 		OutlierScores      []any  `json:"outlier_scores"`
 	} `json:"expected"`
+}
+
+func TestSparseFixtureParity(t *testing.T) {
+	b, err := os.ReadFile("testdata/parity/precomputed_sparse_connected.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var f parityCase
+	if err = json.Unmarshal(b, &f); err != nil {
+		t.Fatal(err)
+	}
+	c := Config{}
+	json.Unmarshal(f.Config["min_cluster_size"], &c.MinClusterSize)
+	json.Unmarshal(f.Config["min_samples"], &c.MinSamples)
+	s := SparsePrecomputed{Data: decodeNums(f.Case.CSR.Data), Indices: f.Case.CSR.Indices, IndPtr: f.Case.CSR.IndPtr, Rows: f.Case.Rows, Cols: f.Case.Cols}
+	got, err := ReferenceSparse(context.Background(), s, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(canonical(got.Labels), canonical(f.Expected.Labels)) {
+		t.Fatalf("labels=%v want %v", got.Labels, f.Expected.Labels)
+	}
+	want := decodeNums(f.Expected.Probabilities)
+	for i := range want {
+		if math.Abs(got.Probabilities[i]-want[i]) > 1e-7 {
+			t.Fatalf("probability[%d]=%g want %g", i, got.Probabilities[i], want[i])
+		}
+	}
 }
 
 func TestExactFixtureParityWithReference(t *testing.T) {
@@ -53,6 +85,16 @@ func TestExactFixtureParityWithReference(t *testing.T) {
 			json.Unmarshal(f.Config["alpha"], &c.Alpha)
 			json.Unmarshal(f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
 			json.Unmarshal(f.Config["allow_single_cluster"], &c.AllowSingleCluster)
+			var metric string
+			json.Unmarshal(f.Config["metric"], &metric)
+			switch metric {
+			case "chebyshev":
+				c.Metric = Chebyshev
+			case "canberra":
+				c.Metric = Canberra
+			case "braycurtis":
+				c.Metric = BrayCurtis
+			}
 			x := Dense64{data, f.Case.Rows, f.Case.Cols}
 			want, err := Reference(context.Background(), x, c)
 			if err != nil {
@@ -134,6 +176,16 @@ func TestReferenceParity(t *testing.T) {
 			json.Unmarshal(f.Config["alpha"], &c.Alpha)
 			json.Unmarshal(f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
 			json.Unmarshal(f.Config["allow_single_cluster"], &c.AllowSingleCluster)
+			var metric string
+			json.Unmarshal(f.Config["metric"], &metric)
+			switch metric {
+			case "chebyshev":
+				c.Metric = Chebyshev
+			case "canberra":
+				c.Metric = Canberra
+			case "braycurtis":
+				c.Metric = BrayCurtis
+			}
 			got, err := Reference(context.Background(), Dense64{data, f.Case.Rows, f.Case.Cols}, c)
 			if err != nil {
 				t.Fatal(err)

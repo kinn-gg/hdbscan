@@ -27,6 +27,9 @@ const (
 	SquaredEuclidean builtinMetric = iota
 	Euclidean
 	Manhattan
+	Chebyshev
+	Canberra
+	BrayCurtis
 )
 
 func (m builtinMetric) Distance(a, b []float64) float64 {
@@ -38,6 +41,34 @@ func (m builtinMetric) Distance(a, b []float64) float64 {
 		return distance.Euclidean(a, b)
 	case Manhattan:
 		return distance.Manhattan(a, b)
+	case Chebyshev:
+		var result float64
+		for i := range a {
+			v := math.Abs(a[i] - b[i])
+			if v > result {
+				result = v
+			}
+		}
+		return result
+	case Canberra:
+		var result float64
+		for i := range a {
+			denom := math.Abs(a[i]) + math.Abs(b[i])
+			if denom != 0 {
+				result += math.Abs(a[i]-b[i]) / denom
+			}
+		}
+		return result
+	case BrayCurtis:
+		var numerator, denominator float64
+		for i := range a {
+			numerator += math.Abs(a[i] - b[i])
+			denominator += math.Abs(a[i] + b[i])
+		}
+		if denominator == 0 {
+			return 0
+		}
+		return numerator / denominator
 	default:
 		panic("hdbscan: unknown built-in metric")
 	}
@@ -52,7 +83,7 @@ func (m builtinMetric) SquaredDistance(a, b []float64) float64 {
 		d := distance.SquaredEuclidean(a, b)
 		return d * d
 	}
-	value := distance.Manhattan(a, b)
+	value := m.Distance(a, b)
 	return value * value
 }
 
@@ -64,9 +95,45 @@ func (m builtinMetric) String() string {
 		return "euclidean"
 	case Manhattan:
 		return "manhattan"
+	case Chebyshev:
+		return "chebyshev"
+	case Canberra:
+		return "canberra"
+	case BrayCurtis:
+		return "braycurtis"
 	default:
 		return "unknown"
 	}
+}
+
+// SpatialIndex identifies an exact spatial index that is mathematically valid
+// for a metric. The empty result means bounded brute force is required.
+type SpatialIndex string
+
+const (
+	KDTreeIndex   SpatialIndex = "kdtree"
+	BallTreeIndex SpatialIndex = "balltree"
+)
+
+// ValidSpatialIndexes reports optimized indexes that preserve a metric's
+// geometry. The current engine implements KDTreeIndex for Euclidean only; the
+// remaining declarations allow future selectors and external backends to avoid
+// choosing an invalid index.
+func ValidSpatialIndexes(metric Metric) []SpatialIndex {
+	switch m := metric.(type) {
+	case builtinMetric:
+		switch m {
+		case Euclidean:
+			return []SpatialIndex{KDTreeIndex, BallTreeIndex}
+		case Manhattan, Chebyshev:
+			return []SpatialIndex{KDTreeIndex, BallTreeIndex}
+		case Canberra, BrayCurtis:
+			return []SpatialIndex{BallTreeIndex}
+		}
+	case MinkowskiMetric:
+		return []SpatialIndex{KDTreeIndex, BallTreeIndex}
+	}
+	return nil
 }
 
 // MinkowskiMetric computes (sum(abs(a-b)^P))^(1/P). P must be finite and at

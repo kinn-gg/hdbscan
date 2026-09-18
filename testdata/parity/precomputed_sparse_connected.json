@@ -1,0 +1,145 @@
+{
+  "case": {
+    "cols": 4,
+    "csr": {
+      "data": [
+        1.0,
+        4.0,
+        5.0,
+        1.0,
+        3.0,
+        4.0,
+        4.0,
+        3.0,
+        1.0,
+        5.0,
+        4.0,
+        1.0
+      ],
+      "indices": [
+        1,
+        2,
+        3,
+        0,
+        2,
+        3,
+        0,
+        1,
+        3,
+        0,
+        1,
+        2
+      ],
+      "indptr": [
+        0,
+        3,
+        6,
+        9,
+        12
+      ]
+    },
+    "description": "Connected precomputed CSR graph.",
+    "dtype": "float64",
+    "input_kind": "precomputed_csr",
+    "name": "precomputed_sparse_connected",
+    "rows": 4
+  },
+  "config": {
+    "algorithm": "generic",
+    "approx_min_span_tree": false,
+    "gen_min_span_tree": true,
+    "metric": "precomputed",
+    "min_cluster_size": 2,
+    "min_samples": 1
+  },
+  "expected": {
+    "cluster_persistence": [
+      0.6666666666666667,
+      0.6666666666666667
+    ],
+    "condensed_tree": [
+      {
+        "child": 5,
+        "child_size": 2,
+        "lambda_val": 0.3333333333333333,
+        "parent": 4
+      },
+      {
+        "child": 6,
+        "child_size": 2,
+        "lambda_val": 0.3333333333333333,
+        "parent": 4
+      },
+      {
+        "child": 0,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 5
+      },
+      {
+        "child": 1,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 5
+      },
+      {
+        "child": 2,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 6
+      },
+      {
+        "child": 3,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 6
+      }
+    ],
+    "labels": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "minimum_spanning_tree": null,
+    "outcome": "success",
+    "outlier_scores": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "probabilities": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "single_linkage_tree": [
+      [
+        0.0,
+        1.0,
+        1.0,
+        2.0
+      ],
+      [
+        2.0,
+        3.0,
+        1.0,
+        2.0
+      ],
+      [
+        4.0,
+        5.0,
+        3.0,
+        4.0
+      ]
+    ]
+  },
+  "schema_version": 1,
+  "upstream": {
+    "commit": "dfdc9ca2b265ab6d50cf64b428199785700af240",
+    "package": "hdbscan",
+    "version": "0.8.44"
+  }
+}

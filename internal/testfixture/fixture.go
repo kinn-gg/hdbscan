@@ -70,6 +70,7 @@ type Fixture struct {
 		ErrorType           string          `json:"error_type"`
 		ErrorMessage        string          `json:"error_message"`
 	} `json:"expected"`
+	Extended json.RawMessage `json:"extended"`
 }
 
 func (fixture Fixture) Validate() error {
