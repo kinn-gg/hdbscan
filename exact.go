@@ -68,6 +68,8 @@ func Exact(ctx context.Context, x Dense64, cfg Config) (Result, error) {
 		}
 		core, mst, err = backend.Build(ctx, x, metric, cfg.MinSamples, cfg.Alpha, workers)
 		if err == nil {
+			core = append([]float64(nil), core...)
+			mst = append([]MSTEdge(nil), mst...)
 			err = validateApproximateResult(x.Rows, core, mst)
 		}
 	case AlgorithmReference:
@@ -84,7 +86,7 @@ func Exact(ctx context.Context, x Dense64, cfg Config) (Result, error) {
 	condensed := condense(link, cfg.MinClusterSize)
 	stability := stabilities(condensed)
 	labels, probs, persistence := selectClusters(x.Rows, condensed, stability, cfg)
-	return Result{Labels: labels, Probabilities: probs, ClusterPersistence: persistence, OutlierScores: outliers(x.Rows, condensed), MinimumSpanningTree: mst, SingleLinkageTree: link, CondensedTree: condensed, Metadata: Metadata{Algorithm: algorithm, Approximate: algorithm == AlgorithmApproximate, Workers: workers}}, nil
+	return Result{Labels: labels, Probabilities: probs, ClusterPersistence: persistence, OutlierScores: outliers(x.Rows, condensed), MinimumSpanningTree: mst, SingleLinkageTree: link, CondensedTree: condensed, Metadata: Metadata{Algorithm: algorithm, Approximate: algorithm == AlgorithmApproximate, Workers: workers}, config: retainedConfig(cfg)}, nil
 }
 
 func treePrim(ctx context.Context, tree *kdtree.Tree, core []float64, alpha float64) ([]MSTEdge, error) {
