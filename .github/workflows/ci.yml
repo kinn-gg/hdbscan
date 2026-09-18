@@ -52,7 +52,7 @@ jobs:
         env:
           GOOS: linux
           GOARCH: arm64
-          GOAMD64: ''
+          GOAMD64: v1
         run: go test -c ./internal/distance -o distance-arm64.test
 
   arm64-vector-kernels:
