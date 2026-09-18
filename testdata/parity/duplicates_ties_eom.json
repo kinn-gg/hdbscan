@@ -1,0 +1,265 @@
+{
+  "case": {
+    "cols": 2,
+    "data": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      -1.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      -1.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      6.0,
+      5.0,
+      5.0,
+      6.0
+    ],
+    "description": "Duplicates and equal-distance ties.",
+    "dtype": "float64",
+    "input_kind": "dense",
+    "name": "duplicates_ties_eom",
+    "rows": 10
+  },
+  "config": {
+    "algorithm": "generic",
+    "approx_min_span_tree": false,
+    "gen_min_span_tree": true,
+    "min_cluster_size": 2,
+    "min_samples": 2
+  },
+  "expected": {
+    "cluster_persistence": [
+      0.8438262381113938,
+      0.8438262381113939
+    ],
+    "condensed_tree": [
+      {
+        "child": 11,
+        "child_size": 6,
+        "lambda_val": 0.15617376188860607,
+        "parent": 10
+      },
+      {
+        "child": 12,
+        "child_size": 4,
+        "lambda_val": 0.15617376188860607,
+        "parent": 10
+      },
+      {
+        "child": 5,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 11
+      },
+      {
+        "child": 9,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 12
+      },
+      {
+        "child": 4,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 11
+      },
+      {
+        "child": 8,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 12
+      },
+      {
+        "child": 3,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 11
+      },
+      {
+        "child": 6,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 12
+      },
+      {
+        "child": 7,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 12
+      },
+      {
+        "child": 2,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 11
+      },
+      {
+        "child": 0,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 11
+      },
+      {
+        "child": 1,
+        "child_size": 1,
+        "lambda_val": 1.0,
+        "parent": 11
+      }
+    ],
+    "labels": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "minimum_spanning_tree": [
+      [
+        0.0,
+        1.0,
+        1.0
+      ],
+      [
+        0.0,
+        2.0,
+        1.0
+      ],
+      [
+        0.0,
+        3.0,
+        1.0
+      ],
+      [
+        0.0,
+        4.0,
+        1.0
+      ],
+      [
+        0.0,
+        5.0,
+        1.0
+      ],
+      [
+        2.0,
+        6.0,
+        6.4031242374328485
+      ],
+      [
+        6.0,
+        7.0,
+        1.0
+      ],
+      [
+        6.0,
+        8.0,
+        1.0
+      ],
+      [
+        6.0,
+        9.0,
+        1.0
+      ]
+    ],
+    "outcome": "success",
+    "outlier_scores": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "probabilities": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "single_linkage_tree": [
+      [
+        0.0,
+        1.0,
+        1.0,
+        2.0
+      ],
+      [
+        10.0,
+        2.0,
+        1.0,
+        3.0
+      ],
+      [
+        11.0,
+        3.0,
+        1.0,
+        4.0
+      ],
+      [
+        12.0,
+        4.0,
+        1.0,
+        5.0
+      ],
+      [
+        13.0,
+        5.0,
+        1.0,
+        6.0
+      ],
+      [
+        6.0,
+        7.0,
+        1.0,
+        2.0
+      ],
+      [
+        15.0,
+        8.0,
+        1.0,
+        3.0
+      ],
+      [
+        16.0,
+        9.0,
+        1.0,
+        4.0
+      ],
+      [
+        14.0,
+        17.0,
+        6.4031242374328485,
+        10.0
+      ]
+    ]
+  },
+  "schema_version": 1,
+  "upstream": {
+    "commit": "dfdc9ca2b265ab6d50cf64b428199785700af240",
+    "package": "hdbscan",
+    "version": "0.8.44"
+  }
+}

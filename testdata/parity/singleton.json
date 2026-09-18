@@ -1,0 +1,30 @@
+{
+  "case": {
+    "cols": 2,
+    "data": [
+      0.0,
+      0.0
+    ],
+    "description": "Single point; records upstream validation.",
+    "dtype": "float64",
+    "input_kind": "dense",
+    "name": "singleton",
+    "rows": 1
+  },
+  "config": {
+    "algorithm": "generic",
+    "approx_min_span_tree": false,
+    "gen_min_span_tree": true
+  },
+  "expected": {
+    "error_message": "Invalid shape in axis 0: 0.",
+    "error_type": "ValueError",
+    "outcome": "error"
+  },
+  "schema_version": 1,
+  "upstream": {
+    "commit": "dfdc9ca2b265ab6d50cf64b428199785700af240",
+    "package": "hdbscan",
+    "version": "0.8.44"
+  }
+}

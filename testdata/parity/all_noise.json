@@ -1,0 +1,118 @@
+{
+  "case": {
+    "cols": 2,
+    "data": [
+      0.0,
+      0.0,
+      10.0,
+      0.0,
+      0.0,
+      10.0,
+      10.0,
+      10.0
+    ],
+    "description": "Small separated dataset expected to be noise.",
+    "dtype": "float64",
+    "input_kind": "dense",
+    "name": "all_noise",
+    "rows": 4
+  },
+  "config": {
+    "algorithm": "generic",
+    "approx_min_span_tree": false,
+    "gen_min_span_tree": true,
+    "min_cluster_size": 3,
+    "min_samples": 3
+  },
+  "expected": {
+    "cluster_persistence": [],
+    "condensed_tree": [
+      {
+        "child": 3,
+        "child_size": 1,
+        "lambda_val": 0.07071067811865475,
+        "parent": 4
+      },
+      {
+        "child": 0,
+        "child_size": 1,
+        "lambda_val": 0.07071067811865475,
+        "parent": 4
+      },
+      {
+        "child": 1,
+        "child_size": 1,
+        "lambda_val": 0.07071067811865475,
+        "parent": 4
+      },
+      {
+        "child": 2,
+        "child_size": 1,
+        "lambda_val": 0.07071067811865475,
+        "parent": 4
+      }
+    ],
+    "labels": [
+      -1,
+      -1,
+      -1,
+      -1
+    ],
+    "minimum_spanning_tree": [
+      [
+        0.0,
+        1.0,
+        14.142135623730951
+      ],
+      [
+        0.0,
+        2.0,
+        14.142135623730951
+      ],
+      [
+        0.0,
+        3.0,
+        14.142135623730951
+      ]
+    ],
+    "outcome": "success",
+    "outlier_scores": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "probabilities": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "single_linkage_tree": [
+      [
+        0.0,
+        1.0,
+        14.142135623730951,
+        2.0
+      ],
+      [
+        4.0,
+        2.0,
+        14.142135623730951,
+        3.0
+      ],
+      [
+        5.0,
+        3.0,
+        14.142135623730951,
+        4.0
+      ]
+    ]
+  },
+  "schema_version": 1,
+  "upstream": {
+    "commit": "dfdc9ca2b265ab6d50cf64b428199785700af240",
+    "package": "hdbscan",
+    "version": "0.8.44"
+  }
+}

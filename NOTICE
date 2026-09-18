@@ -1,0 +1,8 @@
+This project is an independent Go port of scikit-learn-contrib/hdbscan.
+
+Compatibility fixtures are generated with hdbscan release-0.8.44, commit
+dfdc9ca2b265ab6d50cf64b428199785700af240. The upstream project is Copyright
+(c) 2015 Leland McInnes and distributed under the BSD 3-Clause License included
+in LICENSE.
+
+Upstream source: https://github.com/scikit-learn-contrib/hdbscan
