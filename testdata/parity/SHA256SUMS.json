@@ -5,8 +5,12 @@
   "duplicates_ties_leaf.json": "2be2738f9c7c46cc2c54ae556c760d66532467233db92c5e06997d8a06421aa6",
   "empty.json": "7c2476626ddda76931af38465925d58f2cf811bf82eff6aab21362871bdc7465",
   "high_dimensional.json": "bf2856c251c85506a295eabf9c9ffd9f5a87e2e508cac41edf30906d08571b03",
+  "metric_braycurtis.json": "79ce9c1f86e89dde46de0248c3ad6ad87eaa980be11f46104328323578c00b78",
+  "metric_canberra.json": "cef69efc010120befb0517b62a427e2562bebdd8682b31e9318ffa522661c1c5",
+  "metric_chebyshev.json": "dd6d491dd2f145d2afe73f10409cef1ca18f1a593b747b68e3823bb6f82d8b65",
   "nonfinite_rows.json": "a62655a98bcba83e5c036534228ea385b664e5da0629d4d2545c8d4a5e9e4e5b",
   "precomputed_disconnected.json": "6bdc4c0138bb4df52acae015e72c86e43ad91b107af7694806327bb24957ecfe",
+  "precomputed_sparse_connected.json": "aac4a57adca332c70e02c76fda076fbca5b41565e2d679b8b3a18c795464ec81",
   "singleton.json": "91b8f53473d0d0947a761ceaf4e06d2b452dc70bac0ac9f8bfe73173b687289f",
-  "synthetic_blobs.json": "243398a228a550154287e4d6b14f685c018f10cb36c4251c43a2a9e045139166"
+  "synthetic_blobs.json": "b3b06902a52bd807ea0351de02c43b627041ce822cd823742dcb31a49d5a7533"
 }

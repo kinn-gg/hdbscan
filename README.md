@@ -46,6 +46,12 @@ single-cluster, size, epsilon, and persistence settings to the retained hierarch
 without rebuilding neighbors or the MST. Tree exporters stream CSV or newline-
 delimited JSON directly to an `io.Writer`.
 
+Extended parity includes Chebyshev, Canberra, and Bray-Curtis metrics,
+caller-owned CSR distance graphs through `ReferenceSparse`, robust single
+linkage with reusable hierarchy cuts, and the streaming `ValidityIndex` DBCV
+implementation. Sparse inputs are never densified; disconnected graphs return
+`ErrDisconnected` with an explicit component count.
+
 See the [production guide](docs/production.md) for complexity, memory sizing,
 profiling, cancellation, reproducibility, and release support.
 

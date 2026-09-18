@@ -23,6 +23,10 @@ func TestPublicAPISnapshot(t *testing.T) {
 		"Precomputed", "Reference", "ReferencePrecomputed", "Result", "SelectAlgorithm",
 		"SquaredEuclidean", "SquaredMetric", "Euclidean", "AlgorithmApproximate",
 		"AlgorithmAuto", "AlgorithmBruteForce", "AlgorithmKDTree", "AlgorithmReference",
+		"BallTreeIndex", "BrayCurtis", "Canberra", "Chebyshev", "CutSingleLinkage",
+		"ErrDisconnected", "ErrInsufficientNeighbors", "ErrInvalidSparse", "KDTreeIndex",
+		"ReferenceSparse", "RobustSingleLinkage", "RobustSingleLinkageConfig", "RobustSingleLinkageResult",
+		"SparsePrecomputed", "SpatialIndex", "ValidSpatialIndexes", "ValidityIndex",
 	}
 	fset := token.NewFileSet()
 	packages, err := parser.ParseDir(fset, ".", func(info os.FileInfo) bool {

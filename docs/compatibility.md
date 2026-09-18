@@ -97,6 +97,7 @@ encoders.
 | Dense float64 fitting | Yes | `Model.Fit`, `Fit`; finite row-major input. |
 | `fit_predict` | Yes | `Model.FitPredict`, `FitPredict`. |
 | Euclidean, Manhattan, Minkowski | Yes | Auto optimization is Euclidean; others use bounded brute force. |
+| Chebyshev, Canberra, Bray-Curtis | Yes | Allocation-free metrics using bounded brute force; valid index geometry is declared by `ValidSpatialIndexes`. |
 | Dense precomputed distances | Yes | `ReferencePrecomputed`; `+Inf` missing edges supported. |
 | EOM and leaf selection | Yes | Also available through retained `Result.Extract`. |
 | Selection epsilon/persistence | Yes | Configurable at fit or retained-hierarchy extraction. |
@@ -105,5 +106,7 @@ encoders.
 | Approximate MST | Yes | Explicit opt-in and marked in `Metadata`. |
 | New-point prediction | Yes | Opt in with `Config.PredictionData`; approximate labels, strengths, and GLOSH scores. |
 | Soft membership vectors | Yes | Single, batched, fitted-point, and caller-buffer APIs. |
-| Sparse matrices/graphs | No | Outside v0.1 scope. |
+| Sparse precomputed graphs | Yes | Symmetric CSR stays sparse; missing entries are absent edges. Disconnected graphs return `ErrDisconnected` with a component count. |
+| Robust single linkage/tree cuts | Yes | Shared neighbor, mutual-reachability MST, and linkage representation. |
+| DBCV validity index | Yes | Pair work is streamed; no all-pairs matrix is allocated. |
 | pandas, NetworkX, plotting, sklearn metadata | No | Python integration surface is intentionally not ported. |

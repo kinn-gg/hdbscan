@@ -58,6 +58,9 @@ def cases() -> list[Case]:
         ],
         dtype=np.float64,
     ))
+    sparse_connected = csr_matrix(np.array(
+        [[0, 1, 4, 5], [1, 0, 3, 4], [4, 3, 0, 1], [5, 4, 1, 0]], dtype=np.float64,
+    ))
     common = {"algorithm": "generic", "approx_min_span_tree": False, "gen_min_span_tree": True}
     return [
         Case("empty", np.empty((0, 2)), {**common}, "Empty dense input; records upstream validation."),
@@ -69,6 +72,10 @@ def cases() -> list[Case]:
         Case("nonfinite_rows", nonfinite, {**common, "min_cluster_size": 2, "min_samples": 2}, "Dense rows containing NaN and positive infinity."),
         Case("high_dimensional", blobs(19, 32, 64, 2, 0.3), {**common, "min_cluster_size": 4, "min_samples": 4}, "Fixed high-dimensional dense data."),
         Case("synthetic_blobs", blobs(42, 60, 2, 3, 0.35), {**common, "min_cluster_size": 5, "min_samples": 5}, "Fixed low-dimensional Gaussian blobs."),
+        Case("metric_chebyshev", blobs(22, 24, 3, 2, 0.2), {**common, "metric": "chebyshev", "min_cluster_size": 3, "min_samples": 3}, "Chebyshev metric parity."),
+        Case("metric_canberra", np.abs(blobs(23, 24, 3, 2, 0.2)) + 0.1, {**common, "metric": "canberra", "min_cluster_size": 3, "min_samples": 3}, "Canberra metric parity."),
+        Case("metric_braycurtis", np.abs(blobs(24, 24, 3, 2, 0.2)) + 0.1, {**common, "metric": "braycurtis", "min_cluster_size": 3, "min_samples": 3}, "Bray-Curtis metric parity."),
+        Case("precomputed_sparse_connected", sparse_connected, {**common, "metric": "precomputed", "min_cluster_size": 2, "min_samples": 1}, "Connected precomputed CSR graph."),
         Case("precomputed_disconnected", disconnected, {**common, "metric": "precomputed", "min_cluster_size": 2, "min_samples": 2}, "Disconnected precomputed dense graph."),
     ]
 
@@ -148,7 +155,7 @@ def document(case: Case) -> dict[str, Any]:
             "cols": int(case.data.shape[1]),
             "data": encode_array(case.data.reshape(-1)),
         }
-    return {
+    result = {
         "schema_version": SCHEMA_VERSION,
         "upstream": {
             "package": "hdbscan",
@@ -159,6 +166,22 @@ def document(case: Case) -> dict[str, Any]:
         "config": case.config,
         "expected": expected(case),
     }
+    if case.name == "synthetic_blobs":
+        labels, hierarchy = hdbscan.robust_single_linkage(
+            case.data, cut=1.0, k=5, alpha=1.0, gamma=5,
+            metric="euclidean", algorithm="generic",
+        )
+        fitted = hdbscan.HDBSCAN(**case.config).fit(case.data)
+        score, per_cluster = hdbscan.validity_index(
+            case.data, fitted.labels_, metric="euclidean", per_cluster_scores=True,
+        )
+        result["extended"] = {
+            "robust_single_linkage": {"cut": 1.0, "k": 5, "alpha": 1.0, "gamma": 5,
+                                      "labels": encode_array(labels), "hierarchy": encode_array(hierarchy)},
+            "validity": {"labels": encode_array(fitted.labels_), "score": encode_float(score),
+                         "per_cluster": encode_array(per_cluster)},
+        }
+    return result
 
 
 def render() -> dict[str, bytes]:
