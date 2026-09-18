@@ -43,6 +43,9 @@ type Config struct {
 	// PredictionData retains the compact state required to assign new points
 	// and compute soft memberships. It is disabled by default.
 	PredictionData bool
+	// BranchDetectionData retains the input, core distances, and nearest-neighbor
+	// indices required by DetectBranches. It is disabled by default.
+	BranchDetectionData bool
 }
 
 // MSTEdge is an edge in the mutual-reachability minimum spanning tree.
@@ -77,6 +80,7 @@ type Result struct {
 	Metadata            Metadata
 	config              Config
 	prediction          *predictionData
+	branch              *branchDetectionData
 }
 
 var (
@@ -125,6 +129,9 @@ func ReferencePrecomputed(ctx context.Context, p Precomputed, cfg Config) (Resul
 	}
 	if cfg.PredictionData {
 		return Result{}, ErrPredictionUnsupported
+	}
+	if cfg.BranchDetectionData {
+		return Result{}, ErrBranchUnsupported
 	}
 	return referenceDistances(ctx, append([]float64(nil), p.Data...), p.Rows, cfg, Dense64{})
 }
@@ -217,6 +224,7 @@ func referenceDistances(ctx context.Context, d []float64, n int, cfg Config, x D
 		Metadata:   Metadata{Algorithm: AlgorithmReference},
 		config:     retainedConfig(cfg),
 		prediction: makePredictionData(x, condensed, cfg),
+		branch:     makeBranchDetectionData(x, core, cfg),
 	}, nil
 }
 
@@ -225,6 +233,7 @@ func retainedConfig(config Config) Config {
 	config.Algorithm = ""
 	config.ApproximateBackend = nil
 	config.PredictionData = false
+	config.BranchDetectionData = false
 	return config
 }
 

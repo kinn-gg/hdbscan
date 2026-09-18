@@ -52,6 +52,12 @@ linkage with reusable hierarchy cuts, and the streaming `ValidityIndex` DBCV
 implementation. Sparse inputs are never densified; disconnected graphs return
 `ErrDisconnected` with an explicit component count.
 
+FLASC branch detection is opt-in through `Config.BranchDetectionData` and
+`Result.DetectBranches`; it includes packed approximation graphs, per-cluster
+branch hierarchies and persistence, membership strengths, streaming graph export,
+and approximate branch prediction. See the [branch guide](docs/branch-detection.md)
+and [v1 compatibility policy](docs/v1.md).
+
 See the [production guide](docs/production.md) for complexity, memory sizing,
 profiling, cancellation, reproducibility, and release support.
 

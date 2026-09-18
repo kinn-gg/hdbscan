@@ -26,6 +26,13 @@ an allowed single-cluster model returns its sole membership column. Non-finite o
 wrong-width query matrices are rejected. Prediction is unavailable for models
 fit from precomputed distances because they have no feature vectors.
 
+FLASC state is independently retained with `Config.BranchDetectionData`.
+`BranchCore` retains O(n*min_samples) neighbor indices; `BranchFull` can emit
+O(n²) edges for a dense cluster. Packed graphs store one uint64 and two float64
+weights per edge and stream through `BranchGraph.Write`. See
+[branch detection](branch-detection.md) before enabling it on untrusted or
+unbounded input sizes.
+
 ## Complexity and memory sizing
 
 The reference path costs O(n²) time and memory. Exact k-d-tree and blocked paths
@@ -65,3 +72,4 @@ Dense fits can additionally retain opt-in prediction and soft-membership state.
 
 The module is BSD-3-Clause. `LICENSE` and `NOTICE` retain attribution to the
 upstream `scikit-learn-contrib/hdbscan` project used as the compatibility oracle.
+The stable compatibility and architecture policy is in [the v1 contract](v1.md).

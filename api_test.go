@@ -27,6 +27,7 @@ func TestPublicAPISnapshot(t *testing.T) {
 		"ErrDisconnected", "ErrInsufficientNeighbors", "ErrInvalidSparse", "KDTreeIndex",
 		"ReferenceSparse", "RobustSingleLinkage", "RobustSingleLinkageConfig", "RobustSingleLinkageResult",
 		"SparsePrecomputed", "SpatialIndex", "ValidSpatialIndexes", "ValidityIndex",
+		"BranchConfig", "BranchCore", "BranchDetectionMethod", "BranchFull", "BranchGraph", "BranchResult", "ErrBranchDetectionData", "ErrBranchUnsupported",
 	}
 	fset := token.NewFileSet()
 	packages, err := parser.ParseDir(fset, ".", func(info os.FileInfo) bool {

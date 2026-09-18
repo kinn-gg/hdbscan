@@ -14,6 +14,7 @@ from typing import Any
 
 import hdbscan
 import numpy as np
+from hdbscan import BranchDetector
 from importlib.metadata import version
 from scipy.sparse import csr_matrix, issparse
 
@@ -62,6 +63,12 @@ def cases() -> list[Case]:
         [[0, 1, 4, 5], [1, 0, 3, 4], [4, 3, 0, 1], [5, 4, 1, 0]], dtype=np.float64,
     ))
     common = {"algorithm": "generic", "approx_min_span_tree": False, "gen_min_span_tree": True}
+
+    # A deterministic three-flare example following the published FLASC shape.
+    branch_shapes = np.array([
+        (radius * np.cos(arm * 2 * np.pi / 3), radius * np.sin(arm * 2 * np.pi / 3))
+        for arm in range(3) for radius in (0.15 + np.arange(12) * 0.18)
+    ]) + np.random.default_rng(8128).normal(0, 0.005, size=(36, 2))
     return [
         Case("empty", np.empty((0, 2)), {**common}, "Empty dense input; records upstream validation."),
         Case("singleton", np.array([[0.0, 0.0]]), {**common}, "Single point; records upstream validation."),
@@ -72,6 +79,7 @@ def cases() -> list[Case]:
         Case("nonfinite_rows", nonfinite, {**common, "min_cluster_size": 2, "min_samples": 2}, "Dense rows containing NaN and positive infinity."),
         Case("high_dimensional", blobs(19, 32, 64, 2, 0.3), {**common, "min_cluster_size": 4, "min_samples": 4}, "Fixed high-dimensional dense data."),
         Case("synthetic_blobs", blobs(42, 60, 2, 3, 0.35), {**common, "min_cluster_size": 5, "min_samples": 5}, "Fixed low-dimensional Gaussian blobs."),
+        Case("branch_shapes", branch_shapes, {**common, "min_cluster_size": 3, "min_samples": 3, "branch_detection_data": True, "prediction_data": True}, "Pinned FLASC three-flare example."),
         Case("metric_chebyshev", blobs(22, 24, 3, 2, 0.2), {**common, "metric": "chebyshev", "min_cluster_size": 3, "min_samples": 3}, "Chebyshev metric parity."),
         Case("metric_canberra", np.abs(blobs(23, 24, 3, 2, 0.2)) + 0.1, {**common, "metric": "canberra", "min_cluster_size": 3, "min_samples": 3}, "Canberra metric parity."),
         Case("metric_braycurtis", np.abs(blobs(24, 24, 3, 2, 0.2)) + 0.1, {**common, "metric": "braycurtis", "min_cluster_size": 3, "min_samples": 3}, "Bray-Curtis metric parity."),
@@ -181,6 +189,30 @@ def document(case: Case) -> dict[str, Any]:
             "validity": {"labels": encode_array(fitted.labels_), "score": encode_float(score),
                          "per_cluster": encode_array(per_cluster)},
         }
+    if case.name == "branch_shapes":
+        fitted = hdbscan.HDBSCAN(**case.config).fit(case.data)
+        branches = {}
+        for method in ("full", "core"):
+            detector = BranchDetector(branch_detection_method=method).fit(
+                fitted, labels=np.zeros(case.data.shape[0], dtype=np.intp)
+            )
+            branches[method] = {
+                "labels": encode_array(detector.labels_),
+                "probabilities": encode_array(detector.probabilities_),
+                "cluster_labels": encode_array(detector.cluster_labels_),
+                "branch_labels": encode_array(detector.branch_labels_),
+                "branch_probabilities": encode_array(detector.branch_probabilities_),
+                "branch_persistences": [encode_array(x) for x in detector.branch_persistences_],
+                "centralities": encode_array(detector.centralities_),
+                "cluster_points": [encode_array(x) for x in detector.cluster_points_],
+                "graph_edge_counts": [
+                    len({tuple(sorted((int(row[0]), int(row[1])))) for row in graph if row[0] != row[1]})
+                    for graph in detector._approximation_graphs
+                ],
+                "condensed_tree_counts": [len(x) for x in detector._condensed_trees],
+                "linkage_tree_counts": [len(x) for x in detector._linkage_trees],
+            }
+        result["branches"] = branches
     return result
 
 
