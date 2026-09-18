@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"runtime"
 	"sort"
 	"sync"
 
@@ -14,9 +13,9 @@ import (
 
 const kdTreeMaxDimensions = 32
 
-// Exact runs the memory-efficient exact Euclidean HDBSCAN* engine. It uses an
-// index-only k-d tree in low and moderate dimensions and falls back to Reference
-// when tree pruning is predictably ineffective.
+// Exact runs HDBSCAN* using the selected algorithm. Auto chooses between exact
+// k-d-tree and bounded-memory blocked brute-force paths; approximate execution
+// must be explicitly requested.
 func Exact(ctx context.Context, x Dense64, cfg Config) (Result, error) {
 	if err := x.Validate(); err != nil {
 		return Result{}, err
@@ -24,36 +23,58 @@ func Exact(ctx context.Context, x Dense64, cfg Config) (Result, error) {
 	if x.Rows < 2 {
 		return Result{}, ErrTooFewPoints
 	}
-	if cfg.Metric != nil && cfg.Metric != Euclidean {
-		return Reference(ctx, x, cfg)
-	}
-	if x.Cols == 0 || x.Cols > kdTreeMaxDimensions {
-		return Reference(ctx, x, cfg)
-	}
 	cfg, err := normalizeConfig(cfg, x.Rows)
 	if err != nil {
 		return Result{}, err
 	}
-	workers := cfg.Workers
-	if workers == 0 {
-		workers = runtime.GOMAXPROCS(0)
-	}
-	if workers < 1 {
-		return Result{}, fmt.Errorf("hdbscan: workers must be positive")
-	}
-	if workers > x.Rows {
-		workers = x.Rows
-	}
-	tree := kdtree.New(x.Data, x.Rows, x.Cols)
-	core, err := coreDistances(ctx, tree, cfg.MinSamples, workers)
+	workers, err := normalizeWorkers(cfg.Workers, x.Rows)
 	if err != nil {
 		return Result{}, err
 	}
-	tree.SetValues(core)
-	// Prim's stable frontier is used for the exported canonical tree. The
-	// Boruvka implementation below is kept independently testable; Prim preserves
-	// the M2 tie policy while still streaming distances instead of storing n².
-	mst, err := treePrim(ctx, tree, core, cfg.Alpha)
+	metric := cfg.Metric
+	if metric == nil {
+		metric = Euclidean
+	}
+	algorithm := cfg.Algorithm
+	var selectedTree *kdtree.Tree
+	if algorithm == "" || algorithm == AlgorithmAuto {
+		algorithm, selectedTree = selectAlgorithm(x, metric)
+	}
+	var core []float64
+	var mst []MSTEdge
+	switch algorithm {
+	case AlgorithmKDTree:
+		if !isEuclidean(metric) || x.Cols == 0 || x.Cols > kdTreeMaxDimensions {
+			return Result{}, fmt.Errorf("hdbscan: k-d tree requires 1..%d dimensional Euclidean vectors", kdTreeMaxDimensions)
+		}
+		tree := selectedTree
+		if tree == nil {
+			tree = kdtree.New(x.Data, x.Rows, x.Cols)
+		}
+		core, err = coreDistances(ctx, tree, cfg.MinSamples, workers)
+		if err == nil {
+			tree.SetValues(core)
+			mst, err = treePrim(ctx, tree, core, cfg.Alpha)
+		}
+	case AlgorithmBruteForce:
+		core, err = blockedCoreDistances(ctx, x, metric, cfg.MinSamples, workers)
+		if err == nil {
+			mst, err = streamedPrim(ctx, x, metric, core, cfg.Alpha)
+		}
+	case AlgorithmApproximate:
+		backend := cfg.ApproximateBackend
+		if backend == nil {
+			backend = projectionBackend{}
+		}
+		core, mst, err = backend.Build(ctx, x, metric, cfg.MinSamples, cfg.Alpha, workers)
+		if err == nil {
+			err = validateApproximateResult(x.Rows, core, mst)
+		}
+	case AlgorithmReference:
+		return Reference(ctx, x, cfg)
+	default:
+		return Result{}, fmt.Errorf("hdbscan: invalid algorithm %q", algorithm)
+	}
 	if err != nil {
 		return Result{}, err
 	}
@@ -63,7 +84,7 @@ func Exact(ctx context.Context, x Dense64, cfg Config) (Result, error) {
 	condensed := condense(link, cfg.MinClusterSize)
 	stability := stabilities(condensed)
 	labels, probs, persistence := selectClusters(x.Rows, condensed, stability, cfg)
-	return Result{Labels: labels, Probabilities: probs, ClusterPersistence: persistence, OutlierScores: outliers(x.Rows, condensed), MinimumSpanningTree: mst, SingleLinkageTree: link, CondensedTree: condensed}, nil
+	return Result{Labels: labels, Probabilities: probs, ClusterPersistence: persistence, OutlierScores: outliers(x.Rows, condensed), MinimumSpanningTree: mst, SingleLinkageTree: link, CondensedTree: condensed, Metadata: Metadata{Algorithm: algorithm, Approximate: algorithm == AlgorithmApproximate, Workers: workers}}, nil
 }
 
 func treePrim(ctx context.Context, tree *kdtree.Tree, core []float64, alpha float64) ([]MSTEdge, error) {

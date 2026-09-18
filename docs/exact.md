@@ -25,8 +25,10 @@ stable-Prim frontier matching `Reference`'s canonical tie policy. It allocates
 `O(n)` frontier storage and never materializes pairwise distances.
 
 For non-Euclidean metrics, zero-dimensional observations, or more than 32
-dimensions, `Exact` falls back to `Reference`. The dimension cutoff is a
-conservative guard against ineffective k-d-tree pruning.
+dimensions, Auto uses the bounded-memory blocked brute-force path. The dimension
+cutoff is a conservative guard against ineffective k-d-tree pruning. See
+[algorithm selection and approximate mode](algorithms.md) for forced policies
+and result metadata.
 
 The auxiliary-memory bound is `O(n*d + n + workers*MinSamples)`: tree bounds and
 indices are linear in the input size, core-search heaps are bounded, component

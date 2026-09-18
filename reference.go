@@ -28,6 +28,12 @@ type Config struct {
 	MaxClusterSize         int
 	// Workers bounds parallel work in Exact. Zero uses GOMAXPROCS.
 	Workers int
+	// Algorithm controls the implementation used by Exact. The empty zero value
+	// and AlgorithmAuto both select Auto. Approximate must be explicit.
+	Algorithm Algorithm
+	// ApproximateBackend optionally replaces the built-in approximate neighbor
+	// graph implementation. It is only consulted for AlgorithmApproximate.
+	ApproximateBackend ApproximateBackend
 }
 
 // MSTEdge is an edge in the mutual-reachability minimum spanning tree.
@@ -59,6 +65,7 @@ type Result struct {
 	MinimumSpanningTree []MSTEdge
 	SingleLinkageTree   []Linkage
 	CondensedTree       []CondensedEdge
+	Metadata            Metadata
 }
 
 var ErrTooFewPoints = errors.New("hdbscan: at least two points are required")
@@ -177,7 +184,12 @@ func referenceDistances(ctx context.Context, d []float64, n int, cfg Config) (Re
 	condensed := condense(link, cfg.MinClusterSize)
 	stability := stabilities(condensed)
 	labels, probs, persistence := selectClusters(n, condensed, stability, cfg)
-	return Result{labels, probs, persistence, outliers(n, condensed), mst, link, condensed}, nil
+	return Result{
+		Labels: labels, Probabilities: probs, ClusterPersistence: persistence,
+		OutlierScores: outliers(n, condensed), MinimumSpanningTree: mst,
+		SingleLinkageTree: link, CondensedTree: condensed,
+		Metadata: Metadata{Algorithm: AlgorithmReference},
+	}, nil
 }
 
 func densePrim(ctx context.Context, n int, dist func(int, int) float64) []MSTEdge {
