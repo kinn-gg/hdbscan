@@ -2,7 +2,7 @@
 
 package distance
 
-const arm64VectorThreshold = 8
+const arm64VectorThreshold = 64
 
 var arm64VectorKernels = Kernels{
 	Name:                  "neon",
