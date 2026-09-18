@@ -1,4 +1,4 @@
-# M1 metric throughput: Darwin ARM64
+# Metric throughput: Darwin ARM64
 
 Recorded 2026-09-18 by GitHub Actions on its macOS 15 ARM64 runner with Go
 1.25.x and an Apple M1 (Virtual) CPU. The 100 ms samples compare squared

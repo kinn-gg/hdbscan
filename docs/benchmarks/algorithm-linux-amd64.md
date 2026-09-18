@@ -1,4 +1,4 @@
-# M4 algorithm benchmark — linux/amd64
+# Algorithm benchmark — linux/amd64
 
 Measured on 2026-09-18 with Go 1.24 on an Intel Core i5-12600K using 16 logical
 CPUs. Matrix times are medians of three runs at five iterations each with one
@@ -36,6 +36,6 @@ Reproduce with:
 
 ```sh
 /usr/bin/time -v go test -run '^$' \
-  -bench 'BenchmarkM4AlgorithmMatrix|BenchmarkApproximateQuality' \
+  -bench 'BenchmarkAlgorithmMatrix|BenchmarkApproximateQuality' \
   -benchmem -benchtime=1x .
 ```

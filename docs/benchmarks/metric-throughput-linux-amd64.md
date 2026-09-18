@@ -1,4 +1,4 @@
-# M1 metric throughput: Linux amd64
+# Metric throughput: Linux amd64
 
 Recorded 2026-09-18 on Linux amd64 with Go 1.27.1 and an Intel Core i5-12600K.
 The selected implementation was `scalar`. Results are a single local sample;

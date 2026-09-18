@@ -8,7 +8,6 @@ import hashlib
 import json
 import math
 import pathlib
-import tempfile
 from dataclasses import dataclass
 from typing import Any
 
@@ -237,19 +236,49 @@ def write_files(rendered: dict[str, bytes], destination: pathlib.Path) -> None:
         (destination / name).write_bytes(payload)
 
 
+def equivalent(left: Any, right: Any) -> bool:
+    """Compare fixture documents while tolerating platform-level float drift."""
+    if isinstance(left, float) and isinstance(right, float):
+        return math.isclose(left, right, rel_tol=1e-12, abs_tol=1e-12)
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(
+            equivalent(left[key], right[key]) for key in left
+        )
+    if isinstance(left, list):
+        return len(left) == len(right) and all(
+            equivalent(a, b) for a, b in zip(left, right)
+        )
+    return left == right
+
+
 def check_files(rendered: dict[str, bytes]) -> int:
-    with tempfile.TemporaryDirectory() as directory:
-        generated = pathlib.Path(directory)
-        write_files(rendered, generated)
-        expected_names = sorted(rendered)
-        actual_names = sorted(path.name for path in OUTPUT.glob("*.json"))
-        if expected_names != actual_names:
-            print(f"fixture file set differs: generated={expected_names}, committed={actual_names}")
-            return 1
-        changed = [name for name in expected_names if (generated / name).read_bytes() != (OUTPUT / name).read_bytes()]
-        if changed:
-            print("fixtures differ: " + ", ".join(changed))
-            return 1
+    expected_names = sorted(rendered)
+    actual_names = sorted(path.name for path in OUTPUT.glob("*.json"))
+    if expected_names != actual_names:
+        print(f"fixture file set differs: generated={expected_names}, committed={actual_names}")
+        return 1
+
+    fixture_names = [name for name in expected_names if name != "SHA256SUMS.json"]
+    changed = []
+    for name in fixture_names:
+        generated = json.loads(rendered[name])
+        committed = json.loads((OUTPUT / name).read_bytes())
+        if not equivalent(generated, committed):
+            changed.append(name)
+
+    recorded_hashes = json.loads((OUTPUT / "SHA256SUMS.json").read_bytes())
+    committed_hashes = {
+        name: hashlib.sha256((OUTPUT / name).read_bytes()).hexdigest()
+        for name in fixture_names
+    }
+    if recorded_hashes != committed_hashes:
+        changed.append("SHA256SUMS.json")
+
+    if changed:
+        print("fixtures differ: " + ", ".join(changed))
+        return 1
     print(f"verified {len(rendered) - 1} fixtures against hdbscan {version('hdbscan')}")
     return 0
 

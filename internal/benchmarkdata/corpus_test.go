@@ -12,7 +12,11 @@ func loadManifest(t testing.TB) Manifest {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			t.Errorf("close benchmark manifest: %v", err)
+		}
+	}()
 	manifest, err := Load(file)
 	if err != nil {
 		t.Fatal(err)

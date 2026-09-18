@@ -147,7 +147,7 @@ func mstEdgeRecall(got, want []MSTEdge) float64 {
 	return float64(hits) / float64(len(want))
 }
 
-func BenchmarkM4AlgorithmMatrix(b *testing.B) {
+func BenchmarkAlgorithmMatrix(b *testing.B) {
 	for _, shape := range []struct {
 		name string
 		n, d int
