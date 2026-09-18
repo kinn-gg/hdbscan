@@ -1,0 +1,68 @@
+{
+  "case": {
+    "cols": 6,
+    "csr": {
+      "data": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "indices": [
+        1,
+        2,
+        0,
+        2,
+        0,
+        1,
+        4,
+        5,
+        3,
+        5,
+        3,
+        4
+      ],
+      "indptr": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12
+      ]
+    },
+    "description": "Disconnected precomputed dense graph.",
+    "dtype": "float64",
+    "input_kind": "precomputed_csr",
+    "name": "precomputed_disconnected",
+    "rows": 6
+  },
+  "config": {
+    "algorithm": "generic",
+    "approx_min_span_tree": false,
+    "gen_min_span_tree": true,
+    "metric": "precomputed",
+    "min_cluster_size": 2,
+    "min_samples": 2
+  },
+  "expected": {
+    "error_message": "Sparse distance matrix has multiple connected components!\nThat is, there exist groups of points that are completely disjoint -- there are no distance relations connecting them\nRun hdbscan on each component.",
+    "error_type": "ValueError",
+    "outcome": "error"
+  },
+  "schema_version": 1,
+  "upstream": {
+    "commit": "dfdc9ca2b265ab6d50cf64b428199785700af240",
+    "package": "hdbscan",
+    "version": "0.8.44"
+  }
+}

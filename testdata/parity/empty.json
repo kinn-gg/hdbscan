@@ -1,0 +1,27 @@
+{
+  "case": {
+    "cols": 2,
+    "data": [],
+    "description": "Empty dense input; records upstream validation.",
+    "dtype": "float64",
+    "input_kind": "dense",
+    "name": "empty",
+    "rows": 0
+  },
+  "config": {
+    "algorithm": "generic",
+    "approx_min_span_tree": false,
+    "gen_min_span_tree": true
+  },
+  "expected": {
+    "error_message": "Found array with 0 sample(s) (shape=(0, 2)) while a minimum of 1 is required.",
+    "error_type": "ValueError",
+    "outcome": "error"
+  },
+  "schema_version": 1,
+  "upstream": {
+    "commit": "dfdc9ca2b265ab6d50cf64b428199785700af240",
+    "package": "hdbscan",
+    "version": "0.8.44"
+  }
+}

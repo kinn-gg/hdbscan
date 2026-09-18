@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "recipes": [
+    {"name":"spatial_small","generator":"gaussian_blobs","seed":101,"rows":1000,"dimensions":2,"clusters":5,"spread":0.35},
+    {"name":"spatial_medium","generator":"gaussian_blobs","seed":102,"rows":10000,"dimensions":3,"clusters":12,"spread":0.45},
+    {"name":"spatial_large","generator":"gaussian_blobs","seed":103,"rows":100000,"dimensions":2,"clusters":24,"spread":0.55},
+    {"name":"high_dim_small","generator":"gaussian_blobs","seed":201,"rows":1000,"dimensions":64,"clusters":5,"spread":0.50},
+    {"name":"high_dim_medium","generator":"gaussian_blobs","seed":202,"rows":10000,"dimensions":128,"clusters":10,"spread":0.65},
+    {"name":"high_dim_large","generator":"gaussian_blobs","seed":203,"rows":50000,"dimensions":256,"clusters":20,"spread":0.80},
+    {"name":"ties_small","generator":"duplicate_grid","seed":301,"rows":1000,"dimensions":2,"duplicate_fraction":0.40},
+    {"name":"ties_medium","generator":"duplicate_grid","seed":302,"rows":10000,"dimensions":2,"duplicate_fraction":0.50},
+    {"name":"ties_large","generator":"duplicate_grid","seed":303,"rows":100000,"dimensions":2,"duplicate_fraction":0.60},
+    {"name":"noise_small","generator":"noise_mixture","seed":401,"rows":1000,"dimensions":2,"clusters":3,"noise_fraction":0.70,"spread":0.30},
+    {"name":"noise_medium","generator":"noise_mixture","seed":402,"rows":10000,"dimensions":8,"clusters":6,"noise_fraction":0.75,"spread":0.40},
+    {"name":"noise_large","generator":"noise_mixture","seed":403,"rows":100000,"dimensions":16,"clusters":12,"noise_fraction":0.80,"spread":0.50}
+  ]
+}
