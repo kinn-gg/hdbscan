@@ -1,7 +1,21 @@
 # Benchmark methodology
 
-M0 benchmarks infrastructure and deterministic corpus generation. Algorithm
-benchmarks will be added as each implementation lands.
+M0 established the infrastructure and deterministic corpus generation. M1 adds
+`BenchmarkMetricDimensions`, which reports metric throughput for dimensions 0,
+2, 4, 8, and powers of two through 1024. Run it on each target architecture:
+
+```sh
+go test -run '^$' -bench BenchmarkMetricDimensions -benchmem .
+```
+
+The bytes/op rate treats both input vectors as read once (16 bytes per
+dimension). It is a cross-version throughput indicator, not a claim about
+physical memory traffic or cache misses.
+
+`BenchmarkScalarVectorBreakEven` compares the portable scalar kernel with AVX2
+or NEON at each dimension. AVX2 is compiled when `GOAMD64=v3`; ARM64 always has
+NEON. The measured threshold is applied once by `distance.Select`, outside hot
+loops, so vector setup and tail overhead do not penalize short vectors.
 
 ## Corpus
 

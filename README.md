@@ -3,8 +3,8 @@
 An in-progress, memory-efficient Go implementation of HDBSCAN\*.
 
 Development is organized by [implementation milestones](MILESTONES.md). The
-current milestone establishes a reproducible compatibility and performance
-baseline against `scikit-learn-contrib/hdbscan` before the algorithm is ported.
+current milestone provides validated contiguous inputs and allocation-free
+distance kernels on top of the reproducible compatibility baseline.
 
 ## Development
 
