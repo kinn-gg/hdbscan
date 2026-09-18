@@ -11,6 +11,21 @@ to the caller and never aliases the input or another result. `errors.Is` matches
 neighbor, or MST work. `WriteMST`, `WriteSingleLinkageTree`, and
 `WriteCondensedTree` stream CSV or newline-delimited JSON to an `io.Writer`.
 
+Prediction state is retained only when `Config.PredictionData` is true. It owns
+a copy of the finite dense training data, self-inclusive prediction core
+distances, selected-cluster maps, and exemplar indices. `ApproximatePredict`
+returns stable fitted labels and strengths; `ApproximatePredictScores` estimates
+new-point GLOSH scores. `MembershipVector`, `MembershipVectors`, and
+`AllPointsMembershipVectors` provide soft membership. Their `Into` variants let
+callers reuse output buffers; a batch uses scratch proportional to training rows
+and cluster count, not query count, and performs no per-query heap allocation.
+
+Novel points that do not enter a selected cluster are labeled `-1` with zero
+strength. A model with no selected clusters predicts every novel point as noise;
+an allowed single-cluster model returns its sole membership column. Non-finite or
+wrong-width query matrices are rejected. Prediction is unavailable for models
+fit from precomputed distances because they have no feature vectors.
+
 ## Complexity and memory sizing
 
 The reference path costs O(n²) time and memory. Exact k-d-tree and blocked paths
@@ -43,10 +58,10 @@ governor, Go version, worker count, and dataset recipe before comparing runs.
 
 ## Support and licensing
 
-v0.1 covers dense finite float64 observations, exact Euclidean/Manhattan/
+The package covers dense finite float64 observations, exact Euclidean/Manhattan/
 Minkowski metrics, dense precomputed distances through `ReferencePrecomputed`,
 EOM/leaf extraction, probabilities, persistence, GLOSH scores, and tree export.
-Prediction of unseen samples and soft membership are planned after v0.1.
+Dense fits can additionally retain opt-in prediction and soft-membership state.
 
 The module is BSD-3-Clause. `LICENSE` and `NOTICE` retain attribution to the
 upstream `scikit-learn-contrib/hdbscan` project used as the compatibility oracle.

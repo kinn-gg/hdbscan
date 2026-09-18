@@ -16,6 +16,23 @@ if err != nil { /* handle invalid configuration */ }
 result, err := model.Fit(ctx, data)
 ```
 
+Set `PredictionData: true` before fitting to retain the data needed for
+out-of-sample assignment and soft clustering. Prediction is opt-in so ordinary
+fits do not retain a copy of the input:
+
+```go
+result, err := hdbscan.Fit(ctx, training, hdbscan.Config{
+    MinClusterSize: 5,
+    PredictionData: true,
+})
+labels, strengths, err := result.ApproximatePredict(ctx, novel)
+memberships, err := result.MembershipVectors(ctx, novel)
+```
+
+Caller-buffer forms (`PredictInto`, `PredictScoresInto`,
+`MembershipVectorsInto`, and `AllPointsMembershipVectorsInto`) keep output and
+scratch memory bounded for large batches.
+
 For repeatable benchmarks, set `Config.Algorithm` to `AlgorithmKDTree` or
 `AlgorithmBruteForce`. `AlgorithmApproximate` is opt-in and is always identified
 by `result.Metadata.Approximate`; `Auto` never selects it.

@@ -16,7 +16,7 @@ func TestPublicAPISnapshot(t *testing.T) {
 	want := []string{
 		"Algorithm", "ApproximateBackend", "ClusterSelectionMethod", "CondensedEdge",
 		"Config", "Dense64", "EOM", "ErrInvalidConfig", "ErrInvalidPrecomputed",
-		"ErrInvalidShape", "ErrNonFinite", "ErrTooFewPoints", "Exact", "ExportCSV",
+		"ErrInvalidShape", "ErrNonFinite", "ErrPredictionData", "ErrPredictionUnsupported", "ErrTooFewPoints", "Exact", "ExportCSV",
 		"ExportFormat", "ExportJSON", "ExtractionConfig", "Fit", "FitPredict",
 		"FlatResult", "Leaf", "Linkage", "MSTEdge", "Manhattan", "Metadata",
 		"Metric", "MetricFunc", "MinkowskiMetric", "Model", "New", "NewMinkowski",
