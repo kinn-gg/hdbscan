@@ -66,7 +66,7 @@ func TestExactCancellation(t *testing.T) {
 	}
 }
 
-func TestExactHighDimensionalFallback(t *testing.T) {
+func TestExactHighDimensionalBlockedPath(t *testing.T) {
 	x := randomDense(10, kdTreeMaxDimensions+1, 2)
 	cfg := Config{MinClusterSize: 2}
 	got, err := Exact(context.Background(), x, cfg)
@@ -77,8 +77,12 @@ func TestExactHighDimensionalFallback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if got.Metadata.Algorithm != AlgorithmBruteForce || got.Metadata.Approximate {
+		t.Fatalf("metadata = %+v", got.Metadata)
+	}
+	got.Metadata, want.Metadata = Metadata{}, Metadata{}
 	if !reflect.DeepEqual(got, want) {
-		t.Fatal("fallback differs from Reference")
+		t.Fatal("blocked path differs from Reference")
 	}
 }
 

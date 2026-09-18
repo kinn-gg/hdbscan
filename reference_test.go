@@ -64,6 +64,7 @@ func TestExactFixtureParityWithReference(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
+				got.Metadata, want.Metadata = Metadata{}, Metadata{}
 				if !reflect.DeepEqual(got, want) {
 					t.Fatalf("workers=%d differs from Reference", workers)
 				}

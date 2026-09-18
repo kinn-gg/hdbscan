@@ -52,6 +52,12 @@ Go's benchmark output covers time and managed allocations, not peak RSS. The CI
 benchmark workflow also captures `/usr/bin/time -v` and system metadata. Future
 command benchmarks will use this wrapper to measure end-to-end peak RSS.
 
+M4 adds `BenchmarkM4AlgorithmMatrix` for Auto versus forced exact paths and
+`BenchmarkApproximateQuality`, which reports ARI, exact-MST edge recall, speedup,
+and managed bytes/op. The Auto regression budget is 1.5× the fastest exact
+built-in path for each matrix workload; CI records the values rather than using
+timing as a flaky pass/fail gate. See [the algorithm guide](algorithms.md).
+
 ## CI policy
 
 The benchmark workflow uses the version-pinned `ubuntu-24.04` GitHub runner image
