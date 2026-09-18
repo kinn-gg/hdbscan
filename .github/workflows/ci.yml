@@ -82,6 +82,19 @@ jobs:
       - run: uv sync --locked --project tools/fixtures
       - run: uv run --project tools/fixtures python tools/fixtures/generate.py --check
 
+  lint:
+    name: golangci-lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache: true
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.13.2
+
   quality:
     runs-on: ubuntu-24.04
     steps:

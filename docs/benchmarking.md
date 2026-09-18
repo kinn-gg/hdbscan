@@ -1,7 +1,6 @@
 # Benchmark methodology
 
-M0 established the infrastructure and deterministic corpus generation. M1 adds
-`BenchmarkMetricDimensions`, which reports metric throughput for dimensions 0,
+`BenchmarkMetricDimensions` reports metric throughput for dimensions 0,
 2, 4, 8, and powers of two through 1024. Run it on each target architecture:
 
 ```sh
@@ -52,22 +51,22 @@ Go's benchmark output covers time and managed allocations, not peak RSS. The CI
 benchmark workflow also captures `/usr/bin/time -v` and system metadata. Future
 command benchmarks will use this wrapper to measure end-to-end peak RSS.
 
-M4 adds `BenchmarkM4AlgorithmMatrix` for Auto versus forced exact paths and
+`BenchmarkAlgorithmMatrix` compares Auto versus forced exact paths and
 `BenchmarkApproximateQuality`, which reports ARI, exact-MST edge recall, speedup,
 and managed bytes/op. The Auto regression budget is 1.5× the fastest exact
 built-in path for each matrix workload; CI records the values rather than using
 timing as a flaky pass/fail gate. See [the algorithm guide](algorithms.md).
 
-The pinned M5 release comparison and its explicit runtime/RSS gates are published
-in [`benchmarks/m5-linux-amd64.md`](benchmarks/m5-linux-amd64.md).
+The pinned release comparison and its explicit runtime/RSS gates are published
+in [`benchmarks/release-baseline-linux-amd64.md`](benchmarks/release-baseline-linux-amd64.md).
 
-M8 adds `BenchmarkBranchDetection`. Run it separately for `GOARCH=amd64` and on
+Run `BenchmarkBranchDetection` separately for `GOARCH=amd64` and on
 physical `arm64`; cross-compilation validates portability but is not a performance
 measurement. FLASC reports must identify `full` or `core`, graph edge count, and
 retained branch-data cost. Experimental float32/GPU/mmap/parallel-linkage work
 must live outside the portable package and publish accuracy and complexity deltas.
 The initial amd64 result and explicit arm64 measurement gap are published in
-[`benchmarks/m8-linux-amd64.md`](benchmarks/m8-linux-amd64.md).
+[`benchmarks/flasc-linux-amd64.md`](benchmarks/flasc-linux-amd64.md).
 
 ## CI policy
 

@@ -1,4 +1,4 @@
-# M8 FLASC benchmark — linux/amd64
+# FLASC benchmark — linux/amd64
 
 Recorded 2026-09-18 on an Intel Core i5-12600K (16 logical CPUs) using the
 repository's deterministic 36-row, two-dimensional three-flare workload.

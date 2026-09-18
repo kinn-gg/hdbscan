@@ -2,7 +2,6 @@
 
 A deterministic, cancellable, memory-conscious Go implementation of HDBSCAN\*.
 
-Development is organized by [implementation milestones](MILESTONES.md).
 `Exact` selects an exact, memory-efficient implementation for the data shape and
 metric. `Reference` remains the quadratic-memory correctness oracle.
 
@@ -66,6 +65,7 @@ profiling, cancellation, reproducibility, and release support.
 ```sh
 go test ./...
 go test -race ./...
+golangci-lint run
 go test -run '^$' -bench . -benchmem ./...
 ```
 

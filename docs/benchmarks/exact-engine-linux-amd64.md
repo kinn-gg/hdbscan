@@ -1,4 +1,4 @@
-# M3 exact-engine benchmark — linux/amd64
+# Exact-engine benchmark — linux/amd64
 
 Measured on 2026-09-18 with Go 1.24 on an Intel Core i5-12600K. Each row is one
 iteration of the checked-in benchmark; peak RSS includes the Go test process and

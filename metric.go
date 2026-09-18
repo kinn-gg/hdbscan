@@ -176,7 +176,7 @@ var ErrInvalidPrecomputed = errors.New("hdbscan: invalid precomputed distance ma
 type Precomputed struct{ Dense64 }
 
 func (p Precomputed) Validate() error {
-	if err := p.Dense64.validateShape(); err != nil {
+	if err := p.validateShape(); err != nil {
 		return errors.Join(ErrInvalidPrecomputed, err)
 	}
 	if p.Rows != p.Cols {

@@ -41,8 +41,8 @@ func TestSparseFixtureParity(t *testing.T) {
 		t.Fatal(err)
 	}
 	c := Config{}
-	json.Unmarshal(f.Config["min_cluster_size"], &c.MinClusterSize)
-	json.Unmarshal(f.Config["min_samples"], &c.MinSamples)
+	mustUnmarshal(t, f.Config["min_cluster_size"], &c.MinClusterSize)
+	mustUnmarshal(t, f.Config["min_samples"], &c.MinSamples)
 	s := SparsePrecomputed{Data: decodeNums(f.Case.CSR.Data), Indices: f.Case.CSR.Indices, IndPtr: f.Case.CSR.IndPtr, Rows: f.Case.Rows, Cols: f.Case.Cols}
 	got, err := ReferenceSparse(context.Background(), s, c)
 	if err != nil {
@@ -80,13 +80,13 @@ func TestExactFixtureParityWithReference(t *testing.T) {
 		}
 		t.Run(f.Case.Name, func(t *testing.T) {
 			c := Config{}
-			json.Unmarshal(f.Config["min_cluster_size"], &c.MinClusterSize)
-			json.Unmarshal(f.Config["min_samples"], &c.MinSamples)
-			json.Unmarshal(f.Config["alpha"], &c.Alpha)
-			json.Unmarshal(f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
-			json.Unmarshal(f.Config["allow_single_cluster"], &c.AllowSingleCluster)
+			mustUnmarshal(t, f.Config["min_cluster_size"], &c.MinClusterSize)
+			mustUnmarshal(t, f.Config["min_samples"], &c.MinSamples)
+			mustUnmarshal(t, f.Config["alpha"], &c.Alpha)
+			mustUnmarshal(t, f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
+			mustUnmarshal(t, f.Config["allow_single_cluster"], &c.AllowSingleCluster)
 			var metric string
-			json.Unmarshal(f.Config["metric"], &metric)
+			mustUnmarshal(t, f.Config["metric"], &metric)
 			switch metric {
 			case "chebyshev":
 				c.Metric = Chebyshev
@@ -122,15 +122,27 @@ func decodeNums(a []any) []float64 {
 		case float64:
 			r[i] = x
 		case string:
-			if x == "NaN" {
+			switch x {
+			case "NaN":
 				r[i] = math.NaN()
-			} else if x == "+Inf" {
+			case "+Inf":
 				r[i] = math.Inf(1)
 			}
 		}
 	}
 	return r
 }
+
+func mustUnmarshal(t testing.TB, data []byte, dst any) {
+	t.Helper()
+	if len(data) == 0 {
+		return
+	}
+	if err := json.Unmarshal(data, dst); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func canonical(a []int) []int {
 	m := map[int]int{}
 	next := 0
@@ -171,13 +183,13 @@ func TestReferenceParity(t *testing.T) {
 				t.Skip("non-finite compatibility filtering is outside Dense64")
 			}
 			c := Config{}
-			json.Unmarshal(f.Config["min_cluster_size"], &c.MinClusterSize)
-			json.Unmarshal(f.Config["min_samples"], &c.MinSamples)
-			json.Unmarshal(f.Config["alpha"], &c.Alpha)
-			json.Unmarshal(f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
-			json.Unmarshal(f.Config["allow_single_cluster"], &c.AllowSingleCluster)
+			mustUnmarshal(t, f.Config["min_cluster_size"], &c.MinClusterSize)
+			mustUnmarshal(t, f.Config["min_samples"], &c.MinSamples)
+			mustUnmarshal(t, f.Config["alpha"], &c.Alpha)
+			mustUnmarshal(t, f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
+			mustUnmarshal(t, f.Config["allow_single_cluster"], &c.AllowSingleCluster)
 			var metric string
-			json.Unmarshal(f.Config["metric"], &metric)
+			mustUnmarshal(t, f.Config["metric"], &metric)
 			switch metric {
 			case "chebyshev":
 				c.Metric = Chebyshev

@@ -38,7 +38,7 @@ The initial Auto guardrail is 1.5× the fastest exact built-in path on the check
 in low- and high-dimensional matrix. Run:
 
 ```sh
-go test -run '^$' -bench 'BenchmarkM4AlgorithmMatrix|BenchmarkBlockedWorkerScaling|BenchmarkApproximateQuality' -benchmem -benchtime=1x
+go test -run '^$' -bench 'BenchmarkAlgorithmMatrix|BenchmarkBlockedWorkerScaling|BenchmarkApproximateQuality' -benchmem -benchtime=1x
 ```
 
 `BenchmarkApproximateQuality` reports adjusted Rand index (`ARI`), exact-MST edge
