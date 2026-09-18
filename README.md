@@ -3,8 +3,19 @@
 An in-progress, memory-efficient Go implementation of HDBSCAN\*.
 
 Development is organized by [implementation milestones](MILESTONES.md). The
-current milestone provides validated contiguous inputs and allocation-free
-distance kernels on top of the reproducible compatibility baseline.
+current milestone provides an exact, deterministic `Reference` HDBSCAN* pipeline
+for correctness and parity testing, built on the validated distance kernels.
+
+```go
+result, err := hdbscan.Reference(ctx, data, hdbscan.Config{
+    MinClusterSize: 5,
+    MinSamples: 5,
+    ClusterSelectionMethod: hdbscan.EOM,
+})
+```
+
+`Reference` intentionally materializes the pairwise distance matrix and is
+limited to smaller data sets. See [the reference implementation guide](docs/reference.md).
 
 ## Development
 
