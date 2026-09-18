@@ -68,7 +68,9 @@ func FuzzVectorKernelParity(f *testing.F) {
 
 func assertClose(t *testing.T, name string, n int, got, want float64) {
 	t.Helper()
-	tolerance := 2e-14 * math.Max(1, math.Abs(want))
+	// SIMD reduction trees reassociate sums relative to the scalar loop. Allow
+	// a small dimension-independent rounding envelope on AVX2 and NEON.
+	tolerance := 1e-12 * math.Max(1, math.Abs(want))
 	if math.Abs(got-want) > tolerance {
 		t.Fatalf("%s[%d] = %.17g, scalar %.17g (tolerance %.3g)", name, n, got, want, tolerance)
 	}
