@@ -12,6 +12,8 @@ import (
 )
 
 const SchemaVersion = 1
+const UpstreamVersion = "0.8.44"
+const UpstreamCommit = "dfdc9ca2b265ab6d50cf64b428199785700af240"
 
 type Float64 float64
 
@@ -59,37 +61,47 @@ type Fixture struct {
 	} `json:"case"`
 	Config   map[string]json.RawMessage `json:"config"`
 	Expected struct {
-		Outcome             string          `json:"outcome"`
-		Labels              []int           `json:"labels"`
-		Probabilities       []Float64       `json:"probabilities"`
-		ClusterPersistence  []Float64       `json:"cluster_persistence"`
-		OutlierScores       []Float64       `json:"outlier_scores"`
-		SingleLinkageTree   json.RawMessage `json:"single_linkage_tree"`
-		CondensedTree       json.RawMessage `json:"condensed_tree"`
-		MinimumSpanningTree json.RawMessage `json:"minimum_spanning_tree"`
-		ErrorType           string          `json:"error_type"`
-		ErrorMessage        string          `json:"error_message"`
+		Outcome            string      `json:"outcome"`
+		Labels             []int       `json:"labels"`
+		Probabilities      []Float64   `json:"probabilities"`
+		ClusterPersistence []Float64   `json:"cluster_persistence"`
+		OutlierScores      []Float64   `json:"outlier_scores"`
+		SingleLinkageTree  [][]Float64 `json:"single_linkage_tree"`
+		CondensedTree      []struct {
+			Parent, Child int
+			Lambda        Float64 `json:"lambda_val"`
+			ChildSize     int     `json:"child_size"`
+		} `json:"condensed_tree"`
+		MinimumSpanningTree [][]Float64 `json:"minimum_spanning_tree"`
+		ErrorType           string      `json:"error_type"`
+		ErrorMessage        string      `json:"error_message"`
 	} `json:"expected"`
-	Extended json.RawMessage `json:"extended"`
-	Branches json.RawMessage `json:"branches"`
+	Extended   json.RawMessage `json:"extended"`
+	Branches   json.RawMessage `json:"branches"`
+	Prediction json.RawMessage `json:"prediction"`
 }
 
 func (fixture Fixture) Validate() error {
 	if fixture.SchemaVersion != SchemaVersion {
 		return fmt.Errorf("schema version %d, want %d", fixture.SchemaVersion, SchemaVersion)
 	}
-	if fixture.Upstream.Package != "hdbscan" || fixture.Upstream.Version == "" || len(fixture.Upstream.Commit) != 40 {
+	if fixture.Upstream.Package != "hdbscan" || fixture.Upstream.Version != UpstreamVersion || fixture.Upstream.Commit != UpstreamCommit {
 		return fmt.Errorf("invalid upstream identity")
 	}
 	if fixture.Case.Name == "" || fixture.Case.Rows < 0 || fixture.Case.Cols < 0 {
 		return fmt.Errorf("invalid case metadata")
 	}
-	if fixture.Case.InputKind == "precomputed_csr" {
+	switch fixture.Case.InputKind {
+	case "precomputed_csr":
 		if fixture.Case.CSR == nil || len(fixture.Case.CSR.Data) != len(fixture.Case.CSR.Indices) || len(fixture.Case.CSR.Indptr) != fixture.Case.Rows+1 {
 			return fmt.Errorf("invalid CSR representation")
 		}
-	} else if len(fixture.Case.Data) != fixture.Case.Rows*fixture.Case.Cols {
-		return fmt.Errorf("data length %d does not match shape %dx%d", len(fixture.Case.Data), fixture.Case.Rows, fixture.Case.Cols)
+	case "dense", "precomputed_dense":
+		if len(fixture.Case.Data) != fixture.Case.Rows*fixture.Case.Cols {
+			return fmt.Errorf("data length %d does not match shape %dx%d", len(fixture.Case.Data), fixture.Case.Rows, fixture.Case.Cols)
+		}
+	default:
+		return fmt.Errorf("unknown input kind %q", fixture.Case.InputKind)
 	}
 	switch fixture.Expected.Outcome {
 	case "success":
@@ -100,6 +112,43 @@ func (fixture Fixture) Validate() error {
 			p := float64(probability)
 			if math.IsNaN(p) || p < 0 || p > 1 {
 				return fmt.Errorf("membership probability %v outside [0,1]", p)
+			}
+		}
+		for _, persistence := range fixture.Expected.ClusterPersistence {
+			p := float64(persistence)
+			if math.IsNaN(p) || math.IsInf(p, 0) || p < 0 {
+				return fmt.Errorf("invalid cluster persistence %v", p)
+			}
+		}
+		if len(fixture.Expected.SingleLinkageTree) != fixture.Case.Rows-1 {
+			return fmt.Errorf("single linkage rows=%d want %d", len(fixture.Expected.SingleLinkageTree), fixture.Case.Rows-1)
+		}
+		for i, row := range fixture.Expected.SingleLinkageTree {
+			if len(row) != 4 {
+				return fmt.Errorf("single linkage row %d has %d fields", i, len(row))
+			}
+		}
+		if len(fixture.Expected.CondensedTree) == 0 {
+			return fmt.Errorf("success fixture has empty condensed tree")
+		}
+		if fixture.Case.InputKind == "dense" {
+			finiteRows := 0
+			for row := 0; row < fixture.Case.Rows; row++ {
+				finite := true
+				for _, value := range fixture.Case.Data[row*fixture.Case.Cols : (row+1)*fixture.Case.Cols] {
+					finite = finite && !math.IsNaN(float64(value)) && !math.IsInf(float64(value), 0)
+				}
+				if finite {
+					finiteRows++
+				}
+			}
+			if len(fixture.Expected.MinimumSpanningTree) != finiteRows-1 {
+				return fmt.Errorf("minimum spanning tree rows=%d want %d", len(fixture.Expected.MinimumSpanningTree), finiteRows-1)
+			}
+		}
+		for i, row := range fixture.Expected.MinimumSpanningTree {
+			if len(row) != 3 {
+				return fmt.Errorf("minimum spanning tree row %d has %d fields", i, len(row))
 			}
 		}
 	case "error":

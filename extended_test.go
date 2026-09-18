@@ -148,9 +148,13 @@ func TestExtendedUpstreamFixtureParity(t *testing.T) {
 		t.Fatalf("RSL hierarchy length=%d want %d", len(r.SingleLinkageTree), len(f.Extended.Robust.Hierarchy))
 	}
 	for i, row := range r.SingleLinkageTree {
-		if math.Abs(row.Distance-f.Extended.Robust.Hierarchy[i][2]) > 1e-7 {
+		want := f.Extended.Robust.Hierarchy[i]
+		if !parityClose(row.Distance, want[2]) || row.Size < 2 || row.Size > x.Rows {
 			t.Fatalf("RSL hierarchy[%d]=%g want %g", i, row.Distance, f.Extended.Robust.Hierarchy[i][2])
 		}
+	}
+	if r.SingleLinkageTree[len(r.SingleLinkageTree)-1].Size != x.Rows {
+		t.Fatal("RSL hierarchy root does not contain every point")
 	}
 	if !reflect.DeepEqual(canonical(r.Labels), canonical(f.Extended.Robust.Labels)) {
 		t.Fatalf("RSL labels=%v want %v", canonical(r.Labels), canonical(f.Extended.Robust.Labels))
@@ -162,4 +166,5 @@ func TestExtendedUpstreamFixtureParity(t *testing.T) {
 	if math.Abs(score-f.Extended.Validity.Score) > 1e-7 {
 		t.Fatalf("validity=%g want %g (per=%v want %v)", score, f.Extended.Validity.Score, per, f.Extended.Validity.Per)
 	}
+	assertParityVector(t, "validity per-cluster", per, f.Extended.Validity.Per)
 }

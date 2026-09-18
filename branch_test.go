@@ -144,13 +144,17 @@ func TestBranchUpstreamFixtureParity(t *testing.T) {
 			Data       []any
 		}
 		Branches map[string]struct {
-			Labels                                           []int
-			BranchLabels                                     []int `json:"branch_labels"`
-			Probabilities, BranchProbabilities, Centralities []float64
-			BranchPersistences                               [][]float64 `json:"branch_persistences"`
-			GraphEdgeCounts                                  []int       `json:"graph_edge_counts"`
-			CondensedTreeCounts                              []int       `json:"condensed_tree_counts"`
-			LinkageTreeCounts                                []int       `json:"linkage_tree_counts"`
+			Labels              []int
+			ClusterLabels       []int `json:"cluster_labels"`
+			BranchLabels        []int `json:"branch_labels"`
+			Probabilities       []float64
+			BranchProbabilities []float64 `json:"branch_probabilities"`
+			Centralities        []float64
+			BranchPersistences  [][]float64 `json:"branch_persistences"`
+			ClusterPoints       [][]int     `json:"cluster_points"`
+			GraphEdgeCounts     []int       `json:"graph_edge_counts"`
+			CondensedTreeCounts []int       `json:"condensed_tree_counts"`
+			LinkageTreeCounts   []int       `json:"linkage_tree_counts"`
 		}
 	}
 	payload, err := os.ReadFile("testdata/parity/branch_shapes.json")
@@ -171,24 +175,101 @@ func TestBranchUpstreamFixtureParity(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if name == "full" && pairAgreement(got.Labels, want.Labels) < .96 {
+		// FLASC can choose different valid equal-centrality trees. Keep explicit,
+		// dataset-specific quality floors for both graph construction methods.
+		minimumAgreement := .96
+		if name == "core" {
+			minimumAgreement = .75
+		}
+		if pairAgreement(got.Labels, want.Labels) < minimumAgreement {
 			t.Errorf("%s partition agreement=%g", name, pairAgreement(got.Labels, want.Labels))
 		}
+		if !reflect.DeepEqual(got.ClusterLabels, want.ClusterLabels) {
+			t.Errorf("%s cluster labels differ", name)
+		}
+		if pairAgreement(got.BranchLabels, want.BranchLabels) < minimumAgreement {
+			t.Errorf("%s branch partition agreement=%g", name, pairAgreement(got.BranchLabels, want.BranchLabels))
+		}
+		maxMAE, maxError := 2e-5, 5e-4
+		if name == "core" {
+			maxMAE, maxError = .18, .75
+		}
+		assertVectorQuality(t, name+" probabilities", got.Probabilities, want.Probabilities, maxMAE, maxError)
+		assertVectorQuality(t, name+" branch probabilities", got.BranchProbabilities, want.BranchProbabilities, maxMAE, maxError)
 		counts := make([]int, len(got.ApproximationGraphs))
 		for i, g := range got.ApproximationGraphs {
 			counts[i] = g.Len()
 		}
-		if len(counts) != len(want.GraphEdgeCounts) || counts[0] == 0 {
-			t.Errorf("%s invalid graph counts %v", name, counts)
+		minimumCountRecall := .98
+		if name == "core" {
+			minimumCountRecall = .9
 		}
-		for i := range got.Centralities {
-			if math.Abs(got.Centralities[i]-want.Centralities[i]) > 1e-7 {
-				t.Fatalf("%s centrality[%d]=%g want %g", name, i, got.Centralities[i], want.Centralities[i])
+		if countRecall(counts, want.GraphEdgeCounts) < minimumCountRecall {
+			t.Errorf("%s graph-count recall=%g", name, countRecall(counts, want.GraphEdgeCounts))
+		}
+		assertParityVector(t, name+" centralities", got.Centralities, want.Centralities)
+		if !reflect.DeepEqual(got.ClusterPoints, want.ClusterPoints) {
+			t.Errorf("%s cluster points differ", name)
+		}
+		condensedCounts, linkageCounts := make([]int, len(got.CondensedTrees)), make([]int, len(got.LinkageTrees))
+		for i := range got.CondensedTrees {
+			condensedCounts[i] = len(got.CondensedTrees[i])
+		}
+		for i := range got.LinkageTrees {
+			linkageCounts[i] = len(got.LinkageTrees[i])
+		}
+		if name == "full" && !reflect.DeepEqual(condensedCounts, want.CondensedTreeCounts) {
+			t.Errorf("%s condensed counts=%v want %v", name, condensedCounts, want.CondensedTreeCounts)
+		}
+		if name == "core" && countRecall(condensedCounts, want.CondensedTreeCounts) < .9 {
+			t.Errorf("%s condensed-count recall=%g", name, countRecall(condensedCounts, want.CondensedTreeCounts))
+		}
+		if name == "full" && !reflect.DeepEqual(linkageCounts, want.LinkageTreeCounts) {
+			t.Errorf("%s linkage counts=%v want %v", name, linkageCounts, want.LinkageTreeCounts)
+		}
+		if name == "core" && countRecall(linkageCounts, want.LinkageTreeCounts) < .9 {
+			t.Errorf("%s linkage-count recall=%g", name, countRecall(linkageCounts, want.LinkageTreeCounts))
+		}
+		if name == "full" && len(got.BranchPersistences) != len(want.BranchPersistences) {
+			t.Fatalf("%s persistence groups=%d want %d", name, len(got.BranchPersistences), len(want.BranchPersistences))
+		}
+		for i := range got.BranchPersistences {
+			if name == "core" {
+				break
 			}
+			assertVectorQuality(t, name+" branch persistence", got.BranchPersistences[i], want.BranchPersistences[i], .002, .005)
 		}
-		if name == "full" && len(got.BranchPersistences[0]) != len(want.BranchPersistences[0]) {
-			t.Errorf("%s persistence count=%d want %d", name, len(got.BranchPersistences[0]), len(want.BranchPersistences[0]))
+	}
+}
+
+func countRecall(got, want []int) float64 {
+	if len(got) != len(want) || len(want) == 0 {
+		return 0
+	}
+	var have, total int
+	for i := range want {
+		have += min(got[i], want[i])
+		total += want[i]
+	}
+	return float64(have) / float64(total)
+}
+
+func assertVectorQuality(t testing.TB, name string, got, want []float64, maxMAE, maxError float64) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Fatalf("%s length=%d want %d", name, len(got), len(want))
+	}
+	var sum, largest float64
+	for i := range want {
+		difference := math.Abs(got[i] - want[i])
+		sum += difference
+		if difference > largest {
+			largest = difference
 		}
+	}
+	mae := sum / float64(len(want))
+	if mae > maxMAE || largest > maxError {
+		t.Errorf("%s MAE=%g max-error=%g; limits %g/%g", name, mae, largest, maxMAE, maxError)
 	}
 }
 

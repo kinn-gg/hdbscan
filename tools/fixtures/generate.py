@@ -14,6 +14,12 @@ from typing import Any
 import hdbscan
 import numpy as np
 from hdbscan import BranchDetector
+from hdbscan.prediction import (
+    all_points_membership_vectors,
+    approximate_predict,
+    approximate_predict_scores,
+    membership_vector,
+)
 from importlib.metadata import version
 from scipy.sparse import csr_matrix, issparse
 
@@ -61,6 +67,21 @@ def cases() -> list[Case]:
     sparse_connected = csr_matrix(np.array(
         [[0, 1, 4, 5], [1, 0, 3, 4], [4, 3, 0, 1], [5, 4, 1, 0]], dtype=np.float64,
     ))
+    dense_precomputed = np.array(
+        [[0, 1, 1.2, 8, 8.1, 8.2], [1, 0, 1.1, 7.8, 8, 8.1],
+         [1.2, 1.1, 0, 8.2, 7.9, 8], [8, 7.8, 8.2, 0, 1, 1.2],
+         [8.1, 8, 7.9, 1, 0, 1.1], [8.2, 8.1, 8, 1.2, 1.1, 0]],
+        dtype=np.float64,
+    )
+    dense_precomputed_missing = np.array(
+        [[0, 1, math.inf, math.inf, math.inf, math.inf],
+         [1, 0, 1.1, math.inf, math.inf, math.inf],
+         [math.inf, 1.1, 0, 4, math.inf, math.inf],
+         [math.inf, math.inf, 4, 0, 1.2, math.inf],
+         [math.inf, math.inf, math.inf, 1.2, 0, 1],
+         [math.inf, math.inf, math.inf, math.inf, 1, 0]],
+        dtype=np.float64,
+    )
     common = {"algorithm": "generic", "approx_min_span_tree": False, "gen_min_span_tree": True}
 
     # A deterministic three-flare example following the published FLASC shape.
@@ -82,6 +103,14 @@ def cases() -> list[Case]:
         Case("metric_chebyshev", blobs(22, 24, 3, 2, 0.2), {**common, "metric": "chebyshev", "min_cluster_size": 3, "min_samples": 3}, "Chebyshev metric parity."),
         Case("metric_canberra", np.abs(blobs(23, 24, 3, 2, 0.2)) + 0.1, {**common, "metric": "canberra", "min_cluster_size": 3, "min_samples": 3}, "Canberra metric parity."),
         Case("metric_braycurtis", np.abs(blobs(24, 24, 3, 2, 0.2)) + 0.1, {**common, "metric": "braycurtis", "min_cluster_size": 3, "min_samples": 3}, "Bray-Curtis metric parity."),
+        Case("metric_manhattan", blobs(25, 30, 4, 3, 0.25), {**common, "metric": "manhattan", "min_cluster_size": 4, "min_samples": 3}, "Manhattan metric parity."),
+        Case("metric_minkowski_p3", blobs(26, 30, 4, 3, 0.25), {**common, "metric": "minkowski", "p": 3.0, "min_cluster_size": 4, "min_samples": 3}, "Non-default Minkowski power parity."),
+        Case("alpha_nondefault", blobs(27, 30, 3, 3, 0.3), {**common, "alpha": 0.75, "min_cluster_size": 4, "min_samples": 3}, "Non-default robust-single-linkage alpha."),
+        Case("selection_epsilon", blobs(28, 36, 2, 3, 0.4), {**common, "cluster_selection_epsilon": 0.2, "min_cluster_size": 4, "min_samples": 3}, "Cluster selection epsilon parity."),
+        Case("selection_persistence", blobs(29, 36, 2, 3, 0.5), {**common, "cluster_selection_persistence": 0.1, "min_cluster_size": 4, "min_samples": 3}, "Cluster selection persistence parity."),
+        Case("max_cluster_size", blobs(30, 36, 2, 3, 0.3), {**common, "max_cluster_size": 10, "min_cluster_size": 4, "min_samples": 3}, "Maximum EOM cluster size parity."),
+        Case("precomputed_dense_connected", dense_precomputed, {**common, "metric": "precomputed", "min_cluster_size": 2, "min_samples": 1}, "Connected dense precomputed distance matrix."),
+        Case("precomputed_dense_missing_edges", dense_precomputed_missing, {**common, "metric": "precomputed", "min_cluster_size": 2, "min_samples": 1}, "Dense precomputed matrix using positive infinity for missing edges."),
         Case("precomputed_sparse_connected", sparse_connected, {**common, "metric": "precomputed", "min_cluster_size": 2, "min_samples": 1}, "Connected precomputed CSR graph."),
         Case("precomputed_disconnected", disconnected, {**common, "metric": "precomputed", "min_cluster_size": 2, "min_samples": 2}, "Disconnected precomputed dense graph."),
     ]
@@ -187,6 +216,26 @@ def document(case: Case) -> dict[str, Any]:
                                       "labels": encode_array(labels), "hierarchy": encode_array(hierarchy)},
             "validity": {"labels": encode_array(fitted.labels_), "score": encode_float(score),
                          "per_cluster": encode_array(per_cluster)},
+        }
+        prediction_fitted = hdbscan.HDBSCAN(**case.config, prediction_data=True).fit(case.data)
+        queries = np.array([[4.5, -1], [5.7, 3.1], [-6.4, 7.7], [0, 0]], dtype=np.float64)
+        predicted_labels, strengths = approximate_predict(prediction_fitted, queries)
+        scores = approximate_predict_scores(prediction_fitted, queries)
+        memberships = membership_vector(prediction_fitted, queries)
+        all_memberships = all_points_membership_vectors(prediction_fitted)
+        result["prediction"] = {
+            "queries": encode_array(queries.reshape(-1)),
+            "rows": int(queries.shape[0]),
+            "cols": int(queries.shape[1]),
+            "labels": encode_array(predicted_labels),
+            "strengths": encode_array(strengths),
+            "scores": encode_array(scores),
+            "memberships": encode_array(memberships),
+            # The Cython oracle leaves some underflowed cells uninitialized.
+            # Retain rows whose values are all material and reproducible.
+            "sampled_all_memberships": {
+                str(row): encode_array(all_memberships[row]) for row in (1, 2, 20, 40)
+            },
         }
     if case.name == "branch_shapes":
         fitted = hdbscan.HDBSCAN(**case.config).fit(case.data)
