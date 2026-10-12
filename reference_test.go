@@ -85,6 +85,7 @@ func TestExactFixtureParityWithReference(t *testing.T) {
 			mustUnmarshal(t, f.Config["alpha"], &c.Alpha)
 			mustUnmarshal(t, f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
 			mustUnmarshal(t, f.Config["allow_single_cluster"], &c.AllowSingleCluster)
+			mustUnmarshal(t, f.Config["cluster_selection_epsilon"], &c.ClusterSelectionEpsilon)
 			var metric string
 			mustUnmarshal(t, f.Config["metric"], &metric)
 			switch metric {
@@ -188,6 +189,7 @@ func TestReferenceParity(t *testing.T) {
 			mustUnmarshal(t, f.Config["alpha"], &c.Alpha)
 			mustUnmarshal(t, f.Config["cluster_selection_method"], &c.ClusterSelectionMethod)
 			mustUnmarshal(t, f.Config["allow_single_cluster"], &c.AllowSingleCluster)
+			mustUnmarshal(t, f.Config["cluster_selection_epsilon"], &c.ClusterSelectionEpsilon)
 			var metric string
 			mustUnmarshal(t, f.Config["metric"], &metric)
 			switch metric {
@@ -230,6 +232,49 @@ func TestReferenceParity(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestAllowSingleClusterEpsilonRootLabels(t *testing.T) {
+	// With the root as the only selected cluster, a point keeps the root label
+	// when it leaves the root at lambda >= 1/epsilon, as upstream do_labelling.
+	b, err := os.ReadFile("testdata/parity/allow_single_cluster.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var f parityCase
+	if err = json.Unmarshal(b, &f); err != nil {
+		t.Fatal(err)
+	}
+	x := Dense64{decodeNums(f.Case.Data), f.Case.Rows, f.Case.Cols}
+	for _, epsilon := range []float64{0.12, 0.15, 0.2} {
+		c := Config{MinClusterSize: 5, AllowSingleCluster: true, ClusterSelectionEpsilon: epsilon}
+		got, err := Reference(context.Background(), x, c)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, e := range got.CondensedTree {
+			if e.Child >= x.Rows {
+				t.Fatalf("epsilon=%g: root split, fixture no longer single-cluster", epsilon)
+			}
+			want := -1
+			if e.Lambda >= 1/epsilon {
+				want = 0
+			}
+			if got.Labels[e.Child] != want {
+				t.Fatalf("epsilon=%g: label[%d]=%d want %d (lambda %g)", epsilon, e.Child, got.Labels[e.Child], want, e.Lambda)
+			}
+		}
+		for _, workers := range []int{1, 2} {
+			c.Workers = workers
+			exact, err := Exact(context.Background(), x, c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(exact.Labels, got.Labels) {
+				t.Fatalf("epsilon=%g workers=%d: Exact labels=%v want %v", epsilon, workers, exact.Labels, got.Labels)
+			}
+		}
 	}
 }
 

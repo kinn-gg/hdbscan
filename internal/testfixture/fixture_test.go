@@ -17,7 +17,7 @@ func TestCommittedFixtures(t *testing.T) {
 	for _, fixture := range fixtures {
 		covered[fixture.Case.Name] = true
 	}
-	for _, name := range []string{"empty", "singleton", "duplicates_ties_eom", "all_noise", "allow_single_cluster", "nonfinite_rows", "high_dimensional", "synthetic_blobs", "precomputed_disconnected"} {
+	for _, name := range []string{"empty", "singleton", "duplicates_ties_eom", "all_noise", "allow_single_cluster", "allow_single_cluster_epsilon", "nonfinite_rows", "high_dimensional", "synthetic_blobs", "precomputed_disconnected"} {
 		if !covered[name] {
 			t.Errorf("required fixture %q is missing", name)
 		}

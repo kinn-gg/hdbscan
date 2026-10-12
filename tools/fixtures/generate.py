@@ -75,6 +75,7 @@ def cases() -> list[Case]:
         Case("duplicates_ties_leaf", duplicates, {**common, "min_cluster_size": 2, "min_samples": 2, "cluster_selection_method": "leaf"}, "Tie-heavy leaf selection."),
         Case("all_noise", all_noise, {**common, "min_cluster_size": 3, "min_samples": 3}, "Small separated dataset expected to be noise."),
         Case("allow_single_cluster", one_cluster, {**common, "min_cluster_size": 5, "allow_single_cluster": True}, "Explicit single-cluster selection."),
+        Case("allow_single_cluster_epsilon", one_cluster, {**common, "min_cluster_size": 5, "allow_single_cluster": True, "cluster_selection_epsilon": 0.15}, "Single root cluster labelled by the epsilon threshold."),
         Case("nonfinite_rows", nonfinite, {**common, "min_cluster_size": 2, "min_samples": 2}, "Dense rows containing NaN and positive infinity."),
         Case("high_dimensional", blobs(19, 32, 64, 2, 0.3), {**common, "min_cluster_size": 4, "min_samples": 4}, "Fixed high-dimensional dense data."),
         Case("synthetic_blobs", blobs(42, 60, 2, 3, 0.35), {**common, "min_cluster_size": 5, "min_samples": 5}, "Fixed low-dimensional Gaussian blobs."),

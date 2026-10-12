@@ -541,10 +541,16 @@ func selectClusters(n int, t []CondensedEdge, s map[int]float64, c Config) ([]in
 			u.union(e.Parent, e.Child)
 		}
 	}
+	// A point of a single selected root cluster is kept when it leaves the root
+	// at or beyond 1/epsilon, or, without epsilon, at the root's largest lambda.
+	rootThreshold := parentMaxLambda[root]
+	if c.ClusterSelectionEpsilon != 0 {
+		rootThreshold = 1 / c.ClusterSelectionEpsilon
+	}
 	for i := 0; i < n; i++ {
 		cl := u.find(i)
 		if v, ok := cmap[cl]; ok {
-			if cl != root || len(clusters) != 1 || !c.AllowSingleCluster || childLambda[i] >= parentMaxLambda[root] {
+			if cl != root || len(clusters) != 1 || !c.AllowSingleCluster || childLambda[i] >= rootThreshold {
 				labels[i] = v
 			}
 		}
